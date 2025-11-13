@@ -1,40 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# EduPlatform - Платформа для онлайн-курсов и вебинаров
 
-## Getting Started
+Современная веб-платформа для образовательных учреждений, позволяющая создавать и проводить онлайн-курсы и вебинары.
 
-First, run the development server:
+## Возможности
+
+- 📚 **Каталог курсов** - просмотр и поиск онлайн-курсов
+- 🎥 **Вебинары** - участие в живых трансляциях и запись на предстоящие вебинары
+- 👤 **Профиль пользователя** - отслеживание прогресса обучения
+- 📱 **Адаптивный дизайн** - работает на всех устройствах
+- 🎨 **Современный UI** - красивый и интуитивный интерфейс
+
+## Технологии
+
+- **Next.js 16** - React фреймворк для продакшена
+- **TypeScript** - типизированный JavaScript
+- **Tailwind CSS** - утилитарный CSS фреймворк
+- **Lucide React** - иконки
+- **date-fns** - работа с датами
+
+## Установка
+
+1. Установите зависимости:
+
+```bash
+npm install
+```
+
+2. Запустите dev сервер:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Откройте [http://localhost:3000](http://localhost:3000) в браузере
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## Структура проекта
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+```
+src/
+├── components/          # Переиспользуемые компоненты
+│   ├── Layout.tsx      # Основной layout
+│   ├── Header.tsx      # Шапка сайта
+│   ├── Footer.tsx      # Подвал сайта
+│   ├── CourseCard.tsx  # Карточка курса
+│   └── WebinarCard.tsx # Карточка вебинара
+├── pages/              # Страницы приложения
+│   ├── index.tsx       # Главная страница
+│   ├── courses/        # Страницы курсов
+│   ├── webinars/       # Страницы вебинаров
+│   ├── profile.tsx     # Профиль пользователя
+│   └── about.tsx       # О нас
+└── styles/             # Глобальные стили
+    └── globals.css
+```
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+## Скрипты
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` - запуск dev сервера
+- `npm run build` - сборка для продакшена
+- `npm start` - запуск production сервера
+- `npm run lint` - проверка кода линтером
 
-## Learn More
+## Лицензия
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+MIT
