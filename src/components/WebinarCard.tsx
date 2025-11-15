@@ -1,8 +1,9 @@
 import React from "react";
 import Link from "next/link";
-import { Calendar, Clock, Users } from "lucide-react";
+import { Calendar, Clock, Users, Heart } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
+import { useFavorites } from "@/contexts/FavoritesContext";
 
 interface WebinarCardProps {
   id: string;
@@ -25,14 +26,29 @@ const WebinarCard: React.FC<WebinarCardProps> = ({
   participants,
   isLive = false,
 }) => {
+  const { isWebinarFavorite, toggleWebinarFavorite } = useFavorites();
+  const isFavorite = isWebinarFavorite(id);
   const isUpcoming = date > new Date();
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWebinarFavorite(id);
+  };
 
   return (
     <Link href={`/webinars/${id}`}>
-      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer border-l-4 border-blue-500">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer border-l-4 border-blue-500 relative">
+        <button
+          onClick={handleFavoriteClick}
+          className="absolute top-4 right-4 bg-white/90 hover:bg-white p-2 rounded-full transition z-10">
+          <Heart
+            className={`w-5 h-5 ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"}`}
+          />
+        </button>
         <div className="p-6">
           <div className="flex items-start justify-between mb-3">
-            <h3 className="text-xl font-semibold text-gray-800 flex-1">{title}</h3>
+            <h3 className="text-xl font-semibold text-gray-800 flex-1 pr-8">{title}</h3>
             {isLive && (
               <span className="ml-2 px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded-full animate-pulse">
                 LIVE

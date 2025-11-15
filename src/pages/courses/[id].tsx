@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
-import { Clock, Users, Star, Play, CheckCircle, BookOpen } from "lucide-react";
+import { Clock, Users, Star, Play, CheckCircle, BookOpen, MessageSquare } from "lucide-react";
 
 // Моковые данные
 const courseData: { [key: string]: any } = {
@@ -23,13 +23,45 @@ const courseData: { [key: string]: any } = {
       { id: 5, title: "Введение в JavaScript", duration: "55 мин", completed: false },
       { id: 6, title: "DOM манипуляции", duration: "65 мин", completed: false },
     ],
+    reviews: [
+      {
+        id: 1,
+        author: "Алексей Смирнов",
+        rating: 5,
+        date: new Date("2024-12-10"),
+        text: "Отличный курс для начинающих! Все объясняется очень понятно, много практических примеров. Рекомендую!",
+      },
+      {
+        id: 2,
+        author: "Мария Козлова",
+        rating: 5,
+        date: new Date("2024-12-08"),
+        text: "Преподаватель очень опытный, материал подается структурированно. Уже после первых уроков смогла создать свой первый сайт.",
+      },
+      {
+        id: 3,
+        author: "Дмитрий Петров",
+        rating: 4,
+        date: new Date("2024-12-05"),
+        text: "Хороший курс, но хотелось бы больше практических заданий. В целом доволен результатом.",
+      },
+      {
+        id: 4,
+        author: "Елена Новикова",
+        rating: 5,
+        date: new Date("2024-12-01"),
+        text: "Лучший курс по веб-разработке, который я проходила! Все темы разобраны детально, есть домашние задания.",
+      },
+    ],
   },
 };
 
 export default function CourseDetail() {
   const router = useRouter();
   const { id } = router.query;
-  const [activeTab, setActiveTab] = useState<"overview" | "lessons">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "lessons" | "reviews">("overview");
+  const [reviewText, setReviewText] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
 
   const course = courseData[id as string];
 
@@ -105,6 +137,15 @@ export default function CourseDetail() {
                     }`}>
                     Уроки ({course.lessons.length})
                   </button>
+                  <button
+                    onClick={() => setActiveTab("reviews")}
+                    className={`py-4 px-2 border-b-2 font-semibold transition ${
+                      activeTab === "reviews"
+                        ? "border-blue-600 text-blue-600"
+                        : "border-transparent text-gray-600 hover:text-gray-800"
+                    }`}>
+                    Отзывы ({course.reviews?.length || 0})
+                  </button>
                 </div>
               </div>
 
@@ -166,6 +207,100 @@ export default function CourseDetail() {
                             <Play className="w-5 h-5" />
                             <span>Смотреть</span>
                           </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "reviews" && (
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Отзывы студентов</h2>
+
+                    {/* Add Review Form */}
+                    <div className="bg-gray-50 rounded-lg p-6 mb-8">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Оставить отзыв</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Ваша оценка
+                          </label>
+                          <div className="flex space-x-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                onClick={() => setReviewRating(star)}
+                                type="button">
+                                <Star
+                                  className={`w-6 h-6 ${
+                                    star <= reviewRating
+                                      ? "text-yellow-400 fill-current"
+                                      : "text-gray-300"
+                                  }`}
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Ваш отзыв
+                          </label>
+                          <textarea
+                            value={reviewText}
+                            onChange={(e) => setReviewText(e.target.value)}
+                            placeholder="Поделитесь своими впечатлениями о курсе..."
+                            rows={4}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (reviewText.trim()) {
+                              alert(
+                                "Отзыв отправлен! (В реальном приложении здесь будет API запрос)",
+                              );
+                              setReviewText("");
+                              setReviewRating(5);
+                            }
+                          }}
+                          className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">
+                          Отправить отзыв
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Reviews List */}
+                    <div className="space-y-6">
+                      {course.reviews?.map((review: any) => (
+                        <div
+                          key={review.id}
+                          className="border-b border-gray-200 pb-6 last:border-b-0 last:pb-0">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h4 className="font-semibold text-gray-800">{review.author}</h4>
+                              <p className="text-sm text-gray-500">
+                                {review.date.toLocaleDateString("ru-RU", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                })}
+                              </p>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`w-5 h-5 ${
+                                    star <= review.rating
+                                      ? "text-yellow-400 fill-current"
+                                      : "text-gray-300"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-gray-600 leading-relaxed">{review.text}</p>
                         </div>
                       ))}
                     </div>

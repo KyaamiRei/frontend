@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import Link from "next/link";
-import { BookOpen, Video, User, Menu, X } from "lucide-react";
+import { BookOpen, Video, User, Menu, X, Heart, Bell } from "lucide-react";
+import { useFavorites } from "@/contexts/FavoritesContext";
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { favoriteCourses, favoriteWebinars } = useFavorites();
+  const favoritesCount = favoriteCourses.length + favoriteWebinars.length;
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50">
@@ -31,6 +34,23 @@ const Header: React.FC = () => {
               href="/about"
               className="text-gray-700 hover:text-blue-600 transition">
               О нас
+            </Link>
+            <Link
+              href="/favorites"
+              className="relative flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition">
+              <Heart className="w-5 h-5" />
+              <span>Избранное</span>
+              {favoritesCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {favoritesCount}
+                </span>
+              )}
+            </Link>
+            <Link
+              href="/notifications"
+              className="relative flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition">
+              <Bell className="w-5 h-5" />
+              <span>Уведомления</span>
             </Link>
             <Link
               href="/profile"
@@ -65,6 +85,18 @@ const Header: React.FC = () => {
                 href="/about"
                 className="text-gray-700 hover:text-blue-600 transition">
                 О нас
+              </Link>
+              <Link
+                href="/favorites"
+                className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition">
+                <Heart className="w-5 h-5" />
+                <span>Избранное {favoritesCount > 0 && `(${favoritesCount})`}</span>
+              </Link>
+              <Link
+                href="/notifications"
+                className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition">
+                <Bell className="w-5 h-5" />
+                <span>Уведомления</span>
               </Link>
               <Link
                 href="/profile"
