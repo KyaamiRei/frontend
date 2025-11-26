@@ -1,10 +1,35 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Head from "next/head";
+import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
 import { User, BookOpen, Video, Award, Settings, Trophy, Target, TrendingUp } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Profile() {
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  if (isLoading || (!isAuthenticated && typeof window !== "undefined")) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-16 flex justify-center">
+          <p className="text-gray-600 text-lg">Загрузка профиля...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <>
       <Head>
@@ -24,9 +49,11 @@ export default function Profile() {
                   <User className="w-12 h-12 text-blue-600" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-800 mb-2">Иван Иванов</h1>
-                  <p className="text-gray-600">ivan.ivanov@example.com</p>
-                  <p className="text-gray-500 text-sm mt-1">Студент с января 2024</p>
+                  <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                    {user.name || "Пользователь"}
+                  </h1>
+                  <p className="text-gray-600">{user.email}</p>
+                  <p className="text-gray-500 text-sm mt-1">Студент EduPlatform</p>
                 </div>
               </div>
             </div>
