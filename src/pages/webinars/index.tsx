@@ -1,56 +1,20 @@
 import React, { useState } from "react";
 import Head from "next/head";
+import Link from "next/link";
 import Layout from "@/components/Layout";
 import WebinarCard from "@/components/WebinarCard";
-import { Search, Calendar } from "lucide-react";
-
-// Моковые данные
-const allWebinars = [
-  {
-    id: "1",
-    title: "Искусственный интеллект в образовании",
-    description: "Обсудим применение AI в современном образовании и перспективы развития.",
-    instructor: "Дмитрий Волков",
-    date: new Date("2024-12-20T18:00:00"),
-    duration: "1.5 часа",
-    participants: 450,
-  },
-  {
-    id: "2",
-    title: "Цифровая трансформация школ",
-    description: "Как внедрить цифровые технологии в образовательный процесс.",
-    instructor: "Елена Новикова",
-    date: new Date("2024-12-22T16:00:00"),
-    duration: "2 часа",
-    participants: 320,
-  },
-  {
-    id: "3",
-    title: "Онлайн-обучение: лучшие практики",
-    description: "Эффективные методы организации онлайн-обучения для студентов.",
-    instructor: "Анна Петрова",
-    date: new Date("2024-12-25T14:00:00"),
-    duration: "1.5 часа",
-    participants: 280,
-  },
-  {
-    id: "4",
-    title: "Геймификация в образовании",
-    description: "Как использовать игровые элементы для повышения мотивации студентов.",
-    instructor: "Максим Соколов",
-    date: new Date("2024-12-18T19:00:00"),
-    duration: "2 часа",
-    participants: 380,
-    isLive: true,
-  },
-];
+import { useWebinars } from "@/contexts/WebinarsContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { Search, Calendar, Plus } from "lucide-react";
 
 export default function Webinars() {
+  const { webinars } = useWebinars();
+  const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "upcoming" | "past">("all");
 
   const now = new Date();
-  const filteredWebinars = allWebinars.filter((webinar) => {
+  const filteredWebinars = webinars.filter((webinar) => {
     const matchesSearch =
       webinar.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       webinar.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -74,7 +38,17 @@ export default function Webinars() {
       </Head>
       <Layout>
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-8">Вебинары</h1>
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-4xl font-bold text-gray-800">Вебинары</h1>
+            {isAuthenticated && (
+              <Link
+                href="/webinars/create"
+                className="flex items-center space-x-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                <Plus className="w-5 h-5" />
+                <span>Создать вебинар</span>
+              </Link>
+            )}
+          </div>
 
           {/* Search and Filter */}
           <div className="mb-8 space-y-4">

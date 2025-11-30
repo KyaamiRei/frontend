@@ -2,68 +2,18 @@ import React, { useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
-import { Clock, Users, Star, Play, CheckCircle, BookOpen, MessageSquare } from "lucide-react";
-
-// Моковые данные
-const courseData: { [key: string]: any } = {
-  "1": {
-    title: "Основы веб-разработки",
-    description: "Изучите HTML, CSS и JavaScript с нуля. Создайте свои первые веб-приложения.",
-    fullDescription:
-      "Этот курс предназначен для начинающих разработчиков, которые хотят освоить основы веб-разработки. Вы изучите HTML для структуры, CSS для стилизации и JavaScript для интерактивности. К концу курса вы сможете создавать полноценные веб-приложения.",
-    instructor: "Иван Петров",
-    duration: "40 часов",
-    students: 1250,
-    rating: 4.8,
-    lessons: [
-      { id: 1, title: "Введение в HTML", duration: "45 мин", completed: true },
-      { id: 2, title: "Структура HTML документа", duration: "50 мин", completed: true },
-      { id: 3, title: "Основы CSS", duration: "60 мин", completed: false },
-      { id: 4, title: "Flexbox и Grid", duration: "70 мин", completed: false },
-      { id: 5, title: "Введение в JavaScript", duration: "55 мин", completed: false },
-      { id: 6, title: "DOM манипуляции", duration: "65 мин", completed: false },
-    ],
-    reviews: [
-      {
-        id: 1,
-        author: "Алексей Смирнов",
-        rating: 5,
-        date: new Date("2024-12-10"),
-        text: "Отличный курс для начинающих! Все объясняется очень понятно, много практических примеров. Рекомендую!",
-      },
-      {
-        id: 2,
-        author: "Мария Козлова",
-        rating: 5,
-        date: new Date("2024-12-08"),
-        text: "Преподаватель очень опытный, материал подается структурированно. Уже после первых уроков смогла создать свой первый сайт.",
-      },
-      {
-        id: 3,
-        author: "Дмитрий Петров",
-        rating: 4,
-        date: new Date("2024-12-05"),
-        text: "Хороший курс, но хотелось бы больше практических заданий. В целом доволен результатом.",
-      },
-      {
-        id: 4,
-        author: "Елена Новикова",
-        rating: 5,
-        date: new Date("2024-12-01"),
-        text: "Лучший курс по веб-разработке, который я проходила! Все темы разобраны детально, есть домашние задания.",
-      },
-    ],
-  },
-};
+import { useCourses } from "@/contexts/CoursesContext";
+import { Clock, Users, Star, Play, CheckCircle } from "lucide-react";
 
 export default function CourseDetail() {
   const router = useRouter();
   const { id } = router.query;
+  const { getCourseById } = useCourses();
   const [activeTab, setActiveTab] = useState<"overview" | "lessons" | "reviews">("overview");
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
 
-  const course = courseData[id as string];
+  const course = id ? getCourseById(id as string) : undefined;
 
   if (!course) {
     return (
@@ -135,7 +85,7 @@ export default function CourseDetail() {
                         ? "border-blue-600 text-blue-600"
                         : "border-transparent text-gray-600 hover:text-gray-800"
                     }`}>
-                    Уроки ({course.lessons.length})
+                    Уроки ({course.lessons?.length ?? 0})
                   </button>
                   <button
                     onClick={() => setActiveTab("reviews")}
@@ -181,7 +131,7 @@ export default function CourseDetail() {
                   <div>
                     <h2 className="text-2xl font-bold text-gray-800 mb-6">Программа курса</h2>
                     <div className="space-y-3">
-                      {course.lessons.map((lesson: any, index: number) => (
+                      {course.lessons?.map((lesson: any, index: number) => (
                         <div
                           key={lesson.id}
                           className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">

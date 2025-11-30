@@ -4,111 +4,17 @@ import Layout from "@/components/Layout";
 import CourseCard from "@/components/CourseCard";
 import WebinarCard from "@/components/WebinarCard";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useCourses } from "@/contexts/CoursesContext";
+import { useWebinars } from "@/contexts/WebinarsContext";
 import { Heart } from "lucide-react";
-
-// Моковые данные (в реальном приложении будут загружаться по ID)
-const allCourses = [
-  {
-    id: "1",
-    title: "Основы веб-разработки",
-    description: "Изучите HTML, CSS и JavaScript с нуля. Создайте свои первые веб-приложения.",
-    instructor: "Иван Петров",
-    duration: "40 часов",
-    students: 1250,
-    rating: 4.8,
-  },
-  {
-    id: "2",
-    title: "Python для начинающих",
-    description: "Полный курс по программированию на Python. От основ до продвинутых тем.",
-    instructor: "Мария Сидорова",
-    duration: "60 часов",
-    students: 2100,
-    rating: 4.9,
-  },
-  {
-    id: "3",
-    title: "Дизайн интерфейсов",
-    description: "Изучите принципы UI/UX дизайна и создавайте красивые интерфейсы.",
-    instructor: "Алексей Козлов",
-    duration: "35 часов",
-    students: 890,
-    rating: 4.7,
-  },
-  {
-    id: "4",
-    title: "React и современный JavaScript",
-    description: "Освойте React, хуки, контекст и создание полноценных приложений.",
-    instructor: "Сергей Иванов",
-    duration: "50 часов",
-    students: 1800,
-    rating: 4.9,
-  },
-  {
-    id: "5",
-    title: "Базы данных и SQL",
-    description: "Изучите проектирование баз данных, SQL запросы и оптимизацию.",
-    instructor: "Ольга Смирнова",
-    duration: "30 часов",
-    students: 1100,
-    rating: 4.6,
-  },
-  {
-    id: "6",
-    title: "Мобильная разработка",
-    description: "Создавайте мобильные приложения для iOS и Android.",
-    instructor: "Андрей Морозов",
-    duration: "70 часов",
-    students: 950,
-    rating: 4.8,
-  },
-];
-
-const allWebinars = [
-  {
-    id: "1",
-    title: "Искусственный интеллект в образовании",
-    description: "Обсудим применение AI в современном образовании и перспективы развития.",
-    instructor: "Дмитрий Волков",
-    date: new Date("2024-12-20T18:00:00"),
-    duration: "1.5 часа",
-    participants: 450,
-  },
-  {
-    id: "2",
-    title: "Цифровая трансформация школ",
-    description: "Как внедрить цифровые технологии в образовательный процесс.",
-    instructor: "Елена Новикова",
-    date: new Date("2024-12-22T16:00:00"),
-    duration: "2 часа",
-    participants: 320,
-  },
-  {
-    id: "3",
-    title: "Онлайн-обучение: лучшие практики",
-    description: "Эффективные методы организации онлайн-обучения для студентов.",
-    instructor: "Анна Петрова",
-    date: new Date("2024-12-25T14:00:00"),
-    duration: "1.5 часа",
-    participants: 280,
-  },
-  {
-    id: "4",
-    title: "Геймификация в образовании",
-    description: "Как использовать игровые элементы для повышения мотивации студентов.",
-    instructor: "Максим Соколов",
-    date: new Date("2024-12-18T19:00:00"),
-    duration: "2 часа",
-    participants: 380,
-    isLive: true,
-  },
-];
 
 export default function Favorites() {
   const { favoriteCourses, favoriteWebinars } = useFavorites();
+  const { courses } = useCourses();
+  const { webinars } = useWebinars();
 
-  const favoriteCoursesData = allCourses.filter((course) => favoriteCourses.includes(course.id));
-  const favoriteWebinarsData = allWebinars.filter((webinar) =>
+  const favoriteCoursesData = courses.filter((course) => favoriteCourses.includes(course.id));
+  const favoriteWebinarsData = webinars.filter((webinar) =>
     favoriteWebinars.includes(webinar.id),
   );
 

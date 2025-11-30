@@ -4,61 +4,26 @@ import Link from "next/link";
 import Layout from "@/components/Layout";
 import CourseCard from "@/components/CourseCard";
 import WebinarCard from "@/components/WebinarCard";
+import { useCourses } from "@/contexts/CoursesContext";
+import { useWebinars } from "@/contexts/WebinarsContext";
 import { BookOpen, Video, TrendingUp, Award } from "lucide-react";
 
-// Моковые данные
-const featuredCourses = [
-  {
-    id: "1",
-    title: "Основы веб-разработки",
-    description: "Изучите HTML, CSS и JavaScript с нуля. Создайте свои первые веб-приложения.",
-    instructor: "Иван Петров",
-    duration: "40 часов",
-    students: 1250,
-    rating: 4.8,
-  },
-  {
-    id: "2",
-    title: "Python для начинающих",
-    description: "Полный курс по программированию на Python. От основ до продвинутых тем.",
-    instructor: "Мария Сидорова",
-    duration: "60 часов",
-    students: 2100,
-    rating: 4.9,
-  },
-  {
-    id: "3",
-    title: "Дизайн интерфейсов",
-    description: "Изучите принципы UI/UX дизайна и создавайте красивые интерфейсы.",
-    instructor: "Алексей Козлов",
-    duration: "35 часов",
-    students: 890,
-    rating: 4.7,
-  },
-];
-
-const upcomingWebinars = [
-  {
-    id: "1",
-    title: "Искусственный интеллект в образовании",
-    description: "Обсудим применение AI в современном образовании и перспективы развития.",
-    instructor: "Дмитрий Волков",
-    date: new Date("2024-12-20T18:00:00"),
-    duration: "1.5 часа",
-    participants: 450,
-  },
-  {
-    id: "2",
-    title: "Цифровая трансформация школ",
-    description: "Как внедрить цифровые технологии в образовательный процесс.",
-    instructor: "Елена Новикова",
-    date: new Date("2024-12-22T16:00:00"),
-    duration: "2 часа",
-    participants: 320,
-  },
-];
-
 export default function Home() {
+  const { courses } = useCourses();
+  const { webinars } = useWebinars();
+
+  // Получаем топ-3 курса по рейтингу
+  const featuredCourses = [...courses]
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 3);
+
+  // Получаем предстоящие вебинары
+  const now = new Date();
+  const upcomingWebinars = webinars
+    .filter((w) => w.date > now)
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .slice(0, 2);
+
   return (
     <>
       <Head>

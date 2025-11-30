@@ -2,38 +2,18 @@ import React, { useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
+import { useWebinars } from "@/contexts/WebinarsContext";
 import { Calendar, Clock, Users, Video, MessageCircle, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 
-// Моковые данные
-const webinarData: { [key: string]: any } = {
-  "1": {
-    title: "Искусственный интеллект в образовании",
-    description: "Обсудим применение AI в современном образовании и перспективы развития.",
-    fullDescription:
-      "На этом вебинаре мы рассмотрим, как искусственный интеллект меняет образовательный ландшафт. Вы узнаете о последних разработках в области AI для образования, практических примерах внедрения и будущих трендах.",
-    instructor: "Дмитрий Волков",
-    instructorBio:
-      "Эксперт в области образовательных технологий с 15-летним опытом. Автор более 50 научных публикаций.",
-    date: new Date("2024-12-20T18:00:00"),
-    duration: "1.5 часа",
-    participants: 450,
-    topics: [
-      "Текущее состояние AI в образовании",
-      "Практические кейсы внедрения",
-      "Перспективы развития",
-      "Вопросы и ответы",
-    ],
-  },
-};
-
 export default function WebinarDetail() {
   const router = useRouter();
   const { id } = router.query;
+  const { getWebinarById } = useWebinars();
   const [chatMessage, setChatMessage] = useState("");
 
-  const webinar = webinarData[id as string];
+  const webinar = id ? getWebinarById(id as string) : undefined;
   const now = new Date();
   const isUpcoming = webinar && webinar.date > now;
   const isLive = webinar && Math.abs(webinar.date.getTime() - now.getTime()) < 2 * 60 * 60 * 1000;

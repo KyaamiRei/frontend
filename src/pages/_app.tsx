@@ -2,13 +2,19 @@ import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CoursesProvider } from "@/contexts/CoursesContext";
+import { WebinarsProvider } from "@/contexts/WebinarsContext";
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <AuthProvider>
-      <FavoritesProvider>
-        <Component {...pageProps} />
-      </FavoritesProvider>
+      <CoursesProvider>
+        <WebinarsProvider>
+          <FavoritesProvider>
+            <Component {...pageProps} />
+          </FavoritesProvider>
+        </WebinarsProvider>
+      </CoursesProvider>
     </AuthProvider>
   );
 }

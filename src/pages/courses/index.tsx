@@ -1,78 +1,11 @@
 import React, { useState } from "react";
 import Head from "next/head";
+import Link from "next/link";
 import Layout from "@/components/Layout";
 import CourseCard from "@/components/CourseCard";
-import { Search, Filter, X } from "lucide-react";
-
-// Моковые данные
-const allCourses = [
-  {
-    id: "1",
-    title: "Основы веб-разработки",
-    description: "Изучите HTML, CSS и JavaScript с нуля. Создайте свои первые веб-приложения.",
-    instructor: "Иван Петров",
-    duration: "40 часов",
-    students: 1250,
-    rating: 4.8,
-    category: "Веб-разработка",
-    price: 0,
-  },
-  {
-    id: "2",
-    title: "Python для начинающих",
-    description: "Полный курс по программированию на Python. От основ до продвинутых тем.",
-    instructor: "Мария Сидорова",
-    duration: "60 часов",
-    students: 2100,
-    rating: 4.9,
-    category: "Программирование",
-    price: 2999,
-  },
-  {
-    id: "3",
-    title: "Дизайн интерфейсов",
-    description: "Изучите принципы UI/UX дизайна и создавайте красивые интерфейсы.",
-    instructor: "Алексей Козлов",
-    duration: "35 часов",
-    students: 890,
-    rating: 4.7,
-    category: "Дизайн",
-    price: 2499,
-  },
-  {
-    id: "4",
-    title: "React и современный JavaScript",
-    description: "Освойте React, хуки, контекст и создание полноценных приложений.",
-    instructor: "Сергей Иванов",
-    duration: "50 часов",
-    students: 1800,
-    rating: 4.9,
-    category: "Веб-разработка",
-    price: 3499,
-  },
-  {
-    id: "5",
-    title: "Базы данных и SQL",
-    description: "Изучите проектирование баз данных, SQL запросы и оптимизацию.",
-    instructor: "Ольга Смирнова",
-    duration: "30 часов",
-    students: 1100,
-    rating: 4.6,
-    category: "Базы данных",
-    price: 1999,
-  },
-  {
-    id: "6",
-    title: "Мобильная разработка",
-    description: "Создавайте мобильные приложения для iOS и Android.",
-    instructor: "Андрей Морозов",
-    duration: "70 часов",
-    students: 950,
-    rating: 4.8,
-    category: "Мобильная разработка",
-    price: 3999,
-  },
-];
+import { useCourses } from "@/contexts/CoursesContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { Search, Filter, X, Plus } from "lucide-react";
 
 const categories = [
   "Все",
@@ -84,13 +17,15 @@ const categories = [
 ];
 
 export default function Courses() {
+  const { courses } = useCourses();
+  const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Все");
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState<"rating" | "students" | "duration">("rating");
   const [showFilters, setShowFilters] = useState(false);
 
-  const filteredCourses = allCourses
+  const filteredCourses = courses
     .filter((course) => {
       const matchesSearch =
         course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -119,7 +54,17 @@ export default function Courses() {
       </Head>
       <Layout>
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-8">Каталог курсов</h1>
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-4xl font-bold text-gray-800">Каталог курсов</h1>
+            {isAuthenticated && (
+              <Link
+                href="/courses/create"
+                className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                <Plus className="w-5 h-5" />
+                <span>Создать курс</span>
+              </Link>
+            )}
+          </div>
 
           {/* Search and Filter */}
           <div className="mb-8 space-y-4">
