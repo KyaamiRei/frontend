@@ -54,14 +54,14 @@ const Footer: React.FC = () => {
               </li>
               <li className="flex items-center space-x-2">
                 <Phone className="w-4 h-4" />
-                <span>+7 (800) 123-45-67</span>
+                <span>+375 (29) 246-38-99</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
-          <p>&copy; 2024 EduPlatform. Все права защищены.</p>
+          <p>&copy; 2025 EduPlatform. Все права защищены.</p>
         </div>
       </div>
     </footer>
