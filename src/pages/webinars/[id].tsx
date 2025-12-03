@@ -106,7 +106,7 @@ export default function WebinarDetail() {
 
                   <h3 className="text-xl font-semibold text-gray-800 mb-3">Темы вебинара:</h3>
                   <ul className="space-y-2">
-                    {webinar.topics.map((topic: string, index: number) => (
+                    {(webinar.topics ?? []).map((topic: string, index: number) => (
                       <li
                         key={index}
                         className="flex items-start text-gray-600">
