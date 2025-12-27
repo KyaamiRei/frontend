@@ -7,7 +7,7 @@ export interface Webinar {
   fullDescription?: string;
   instructor: string;
   instructorBio?: string;
-  date: Date;
+  date: Date | string;
   duration: string;
   participants: number;
   isLive?: boolean;
@@ -17,123 +17,136 @@ export interface Webinar {
 
 interface WebinarsContextType {
   webinars: Webinar[];
-  addWebinar: (webinar: Omit<Webinar, "id" | "participants">) => Webinar;
-  updateWebinar: (id: string, webinar: Partial<Webinar>) => void;
-  deleteWebinar: (id: string) => void;
+  isLoading: boolean;
+  addWebinar: (webinar: Omit<Webinar, "id" | "participants">) => Promise<Webinar>;
+  updateWebinar: (id: string, webinar: Partial<Webinar>) => Promise<void>;
+  deleteWebinar: (id: string) => Promise<void>;
   getWebinarById: (id: string) => Webinar | undefined;
+  refreshWebinars: () => Promise<void>;
 }
 
 const WebinarsContext = createContext<WebinarsContextType | undefined>(undefined);
 
-// Начальные данные
-const initialWebinars: Webinar[] = [
-  {
-    id: "1",
-    title: "Искусственный интеллект в образовании",
-    description: "Обсудим применение AI в современном образовании и перспективы развития.",
-    fullDescription:
-      "На этом вебинаре мы рассмотрим, как искусственный интеллект меняет образовательный ландшафт. Вы узнаете о последних разработках в области AI для образования, практических примерах внедрения и будущих трендах.",
-    instructor: "Дмитрий Волков",
-    instructorBio:
-      "Эксперт в области образовательных технологий с 15-летним опытом. Автор более 50 научных публикаций.",
-    date: new Date("2024-12-20T18:00:00"),
-    duration: "1.5 часа",
-    participants: 450,
-    topics: [
-      "Текущее состояние AI в образовании",
-      "Практические кейсы внедрения",
-      "Перспективы развития",
-      "Вопросы и ответы",
-    ],
-  },
-  {
-    id: "2",
-    title: "Цифровая трансформация школ",
-    description: "Как внедрить цифровые технологии в образовательный процесс.",
-    instructor: "Елена Новикова",
-    date: new Date("2024-12-22T16:00:00"),
-    duration: "2 часа",
-    participants: 320,
-  },
-  {
-    id: "3",
-    title: "Онлайн-обучение: лучшие практики",
-    description: "Эффективные методы организации онлайн-обучения для студентов.",
-    instructor: "Анна Петрова",
-    date: new Date("2024-12-25T14:00:00"),
-    duration: "1.5 часа",
-    participants: 280,
-  },
-  {
-    id: "4",
-    title: "Геймификация в образовании",
-    description: "Как использовать игровые элементы для повышения мотивации студентов.",
-    instructor: "Максим Соколов",
-    date: new Date("2024-12-18T19:00:00"),
-    duration: "2 часа",
-    participants: 380,
-    isLive: false,
-  },
-];
-
 export const WebinarsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [webinars, setWebinars] = useState<Webinar[]>(initialWebinars);
+  const [webinars, setWebinars] = useState<Webinar[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Загрузка из localStorage при монтировании
-  useEffect(() => {
-    const savedWebinars = localStorage.getItem("webinars");
-    if (savedWebinars) {
-      try {
-        const parsed = JSON.parse(savedWebinars);
-        // Преобразуем даты
-        const webinarsWithDates = parsed.map((webinar: Webinar) => ({
-          ...webinar,
-          date: new Date(webinar.date),
-        }));
-        setWebinars(webinarsWithDates);
-      } catch (error) {
-        console.error("Ошибка загрузки вебинаров:", error);
+  // Загрузка вебинаров из API
+  const fetchWebinars = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/webinars");
+      if (!response.ok) {
+        throw new Error("Ошибка загрузки вебинаров");
       }
+      const data = await response.json();
+      // Преобразуем даты
+      const webinarsWithDates = data.map((webinar: Webinar) => ({
+        ...webinar,
+        date: new Date(webinar.date),
+      }));
+      setWebinars(webinarsWithDates);
+    } catch (error) {
+      console.error("Ошибка загрузки вебинаров:", error);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchWebinars();
   }, []);
 
-  // Сохранение в localStorage при изменении
-  useEffect(() => {
-    localStorage.setItem("webinars", JSON.stringify(webinars));
-  }, [webinars]);
+  const addWebinar = async (webinarData: Omit<Webinar, "id" | "participants">): Promise<Webinar> => {
+    try {
+      const response = await fetch("/api/webinars", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(webinarData),
+      });
 
-  const addWebinar = (webinarData: Omit<Webinar, "id" | "participants">): Webinar => {
-    const newWebinar: Webinar = {
-      ...webinarData,
-      id: Date.now().toString(),
-      participants: 0,
-    };
-    setWebinars((prev) => [...prev, newWebinar]);
-    return newWebinar;
+      if (!response.ok) {
+        throw new Error("Ошибка создания вебинара");
+      }
+
+      const newWebinar = await response.json();
+      const webinarWithDate = {
+        ...newWebinar,
+        date: new Date(newWebinar.date),
+      };
+      setWebinars((prev) => [...prev, webinarWithDate]);
+      return webinarWithDate;
+    } catch (error) {
+      console.error("Ошибка создания вебинара:", error);
+      throw error;
+    }
   };
 
-  const updateWebinar = (id: string, webinarData: Partial<Webinar>) => {
-    setWebinars((prev) =>
-      prev.map((webinar) => (webinar.id === id ? { ...webinar, ...webinarData } : webinar)),
-    );
+  const updateWebinar = async (id: string, webinarData: Partial<Webinar>) => {
+    try {
+      const response = await fetch(`/api/webinars/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(webinarData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Ошибка обновления вебинара");
+      }
+
+      const updatedWebinar = await response.json();
+      const webinarWithDate = {
+        ...updatedWebinar,
+        date: new Date(updatedWebinar.date),
+      };
+      setWebinars((prev) =>
+        prev.map((webinar) => (webinar.id === id ? webinarWithDate : webinar)),
+      );
+    } catch (error) {
+      console.error("Ошибка обновления вебинара:", error);
+      throw error;
+    }
   };
 
-  const deleteWebinar = (id: string) => {
-    setWebinars((prev) => prev.filter((webinar) => webinar.id !== id));
+  const deleteWebinar = async (id: string) => {
+    try {
+      const response = await fetch(`/api/webinars/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Ошибка удаления вебинара");
+      }
+
+      setWebinars((prev) => prev.filter((webinar) => webinar.id !== id));
+    } catch (error) {
+      console.error("Ошибка удаления вебинара:", error);
+      throw error;
+    }
   };
 
   const getWebinarById = (id: string): Webinar | undefined => {
     return webinars.find((webinar) => webinar.id === id);
   };
 
+  const refreshWebinars = async () => {
+    await fetchWebinars();
+  };
+
   return (
     <WebinarsContext.Provider
       value={{
         webinars,
+        isLoading,
         addWebinar,
         updateWebinar,
         deleteWebinar,
         getWebinarById,
+        refreshWebinars,
       }}>
       {children}
     </WebinarsContext.Provider>

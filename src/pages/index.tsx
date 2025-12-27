@@ -13,9 +13,7 @@ export default function Home() {
   const { webinars } = useWebinars();
 
   // Получаем топ-3 курса по рейтингу
-  const featuredCourses = [...courses]
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 3);
+  const featuredCourses = [...courses].sort((a, b) => b.rating - a.rating).slice(0, 3);
 
   // Получаем предстоящие вебинары
   const now = new Date();

@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String            @id @default(uuid())
+  name             String
+  email            String            @unique
+  password         String
+  avatar           String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  role             Role              @default(STUDENT)
+  courseReviews    CourseReview[]
+  enrollments      Enrollment[]
+  favoriteCourses  FavoriteCourse[]
+  favoriteWebinars FavoriteWebinar[]
+}
+
+model Course {
+  id              String           @id @default(uuid())
+  title           String
+  description     String
+  fullDescription String?
+  instructor      String
+  duration        String
+  students        Int              @default(0)
+  rating          Float            @default(0)
+  category        String
+  price           Float            @default(0)
+  image           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  reviews         CourseReview[]
+  enrollments     Enrollment[]
+  favorites       FavoriteCourse[]
+  lessons         Lesson[]
+}
+
+model Lesson {
+  id        String   @id @default(uuid())
+  courseId  String
+  title     String
+  duration  String
+  order     Int
+  createdAt DateTime @default(now())
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model CourseReview {
+  id        String   @id @default(uuid())
+  courseId  String
+  userId    String
+  rating    Int
+  text      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, userId])
+}
+
+model Webinar {
+  id              String            @id @default(uuid())
+  title           String
+  description     String
+  fullDescription String?
+  instructor      String
+  instructorBio   String?
+  date            DateTime
+  duration        String
+  participants    Int               @default(0)
+  isLive          Boolean           @default(false)
+  topics          String[]
+  category        String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  favorites       FavoriteWebinar[]
+}
+
+model FavoriteCourse {
+  id        String   @id @default(uuid())
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model FavoriteWebinar {
+  id        String   @id @default(uuid())
+  userId    String
+  webinarId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  webinar   Webinar  @relation(fields: [webinarId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, webinarId])
+}
+
+model Enrollment {
+  id        String   @id @default(uuid())
+  userId    String
+  courseId  String
+  progress  Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}

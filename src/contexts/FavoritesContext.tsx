@@ -1,61 +1,128 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "./AuthContext";
 
 interface FavoritesContextType {
   favoriteCourses: string[];
   favoriteWebinars: string[];
-  toggleCourseFavorite: (courseId: string) => void;
-  toggleWebinarFavorite: (webinarId: string) => void;
+  isLoading: boolean;
+  toggleCourseFavorite: (courseId: string) => Promise<void>;
+  toggleWebinarFavorite: (webinarId: string) => Promise<void>;
   isCourseFavorite: (courseId: string) => boolean;
   isWebinarFavorite: (webinarId: string) => boolean;
+  refreshFavorites: () => Promise<void>;
 }
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
 
 export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [favoriteCourses, setFavoriteCourses] = useState<string[]>([]);
   const [favoriteWebinars, setFavoriteWebinars] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Загрузка избранного из localStorage при монтировании
-  useEffect(() => {
-    const savedCourses = localStorage.getItem("favoriteCourses");
-    const savedWebinars = localStorage.getItem("favoriteWebinars");
-    if (savedCourses) setFavoriteCourses(JSON.parse(savedCourses));
-    if (savedWebinars) setFavoriteWebinars(JSON.parse(savedWebinars));
-  }, []);
+  // Загрузка избранного из API
+  const fetchFavorites = async () => {
+    if (!user?.id) {
+      setFavoriteCourses([]);
+      setFavoriteWebinars([]);
+      return;
+    }
 
-  // Сохранение в localStorage при изменении
-  useEffect(() => {
-    localStorage.setItem("favoriteCourses", JSON.stringify(favoriteCourses));
-  }, [favoriteCourses]);
+    try {
+      setIsLoading(true);
+      const [coursesResponse, webinarsResponse] = await Promise.all([
+        fetch(`/api/favorites/courses?userId=${user.id}`),
+        fetch(`/api/favorites/webinars?userId=${user.id}`),
+      ]);
 
-  useEffect(() => {
-    localStorage.setItem("favoriteWebinars", JSON.stringify(favoriteWebinars));
-  }, [favoriteWebinars]);
+      if (coursesResponse.ok) {
+        const courses = await coursesResponse.json();
+        setFavoriteCourses(courses);
+      }
 
-  const toggleCourseFavorite = (courseId: string) => {
-    setFavoriteCourses((prev) =>
-      prev.includes(courseId) ? prev.filter((id) => id !== courseId) : [...prev, courseId]
-    );
+      if (webinarsResponse.ok) {
+        const webinars = await webinarsResponse.json();
+        setFavoriteWebinars(webinars);
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки избранного:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const toggleWebinarFavorite = (webinarId: string) => {
-    setFavoriteWebinars((prev) =>
-      prev.includes(webinarId) ? prev.filter((id) => id !== webinarId) : [...prev, webinarId]
-    );
+  useEffect(() => {
+    fetchFavorites();
+  }, [user?.id]);
+
+  const toggleCourseFavorite = async (courseId: string) => {
+    if (!user?.id) return;
+
+    try {
+      const response = await fetch(`/api/favorites/courses?userId=${user.id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ courseId }),
+      });
+
+      if (response.ok) {
+        const { isFavorite } = await response.json();
+        setFavoriteCourses((prev) =>
+          isFavorite
+            ? [...prev, courseId]
+            : prev.filter((id) => id !== courseId)
+        );
+      }
+    } catch (error) {
+      console.error("Ошибка обновления избранного курса:", error);
+    }
+  };
+
+  const toggleWebinarFavorite = async (webinarId: string) => {
+    if (!user?.id) return;
+
+    try {
+      const response = await fetch(`/api/favorites/webinars?userId=${user.id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ webinarId }),
+      });
+
+      if (response.ok) {
+        const { isFavorite } = await response.json();
+        setFavoriteWebinars((prev) =>
+          isFavorite
+            ? [...prev, webinarId]
+            : prev.filter((id) => id !== webinarId)
+        );
+      }
+    } catch (error) {
+      console.error("Ошибка обновления избранного вебинара:", error);
+    }
   };
 
   const isCourseFavorite = (courseId: string) => favoriteCourses.includes(courseId);
   const isWebinarFavorite = (webinarId: string) => favoriteWebinars.includes(webinarId);
+
+  const refreshFavorites = async () => {
+    await fetchFavorites();
+  };
 
   return (
     <FavoritesContext.Provider
       value={{
         favoriteCourses,
         favoriteWebinars,
+        isLoading,
         toggleCourseFavorite,
         toggleWebinarFavorite,
         isCourseFavorite,
         isWebinarFavorite,
+        refreshFavorites,
       }}>
       {children}
     </FavoritesContext.Provider>

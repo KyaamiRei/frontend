@@ -1,17 +1,23 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-interface User {
+export type UserRole = "STUDENT" | "TEACHER" | "ADMIN";
+
+export interface User {
   id: string;
   name: string;
   email: string;
+  role: UserRole;
   avatar?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isAdmin: boolean;
+  isTeacher: boolean;
+  isStudent: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, role: "STUDENT" | "TEACHER") => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -32,54 +38,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Имитация API запроса
     setIsLoading(true);
     try {
-      // В реальном приложении здесь будет запрос к API
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      // Простая проверка (в реальном приложении будет проверка на сервере)
-      if (email && password.length >= 6) {
-        const userData: User = {
-          id: "1",
-          name: email.split("@")[0],
-          email: email,
-        };
-        setUser(userData);
-        localStorage.setItem("user", JSON.stringify(userData));
+      if (!response.ok) {
         setIsLoading(false);
-        return true;
+        return false;
       }
+
+      const userData = await response.json();
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
       setIsLoading(false);
-      return false;
+      return true;
     } catch (error) {
+      console.error("Ошибка входа:", error);
       setIsLoading(false);
       return false;
     }
   };
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
-    // Имитация API запроса
+  const register = async (name: string, email: string, password: string, role: "STUDENT" | "TEACHER"): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // В реальном приложении здесь будет запрос к API
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, password, role }),
+      });
 
-      // Простая проверка (в реальном приложении будет проверка на сервере)
-      if (name && email && password.length >= 6) {
-        const userData: User = {
-          id: Date.now().toString(),
-          name: name,
-          email: email,
-        };
-        setUser(userData);
-        localStorage.setItem("user", JSON.stringify(userData));
+      if (!response.ok) {
         setIsLoading(false);
-        return true;
+        return false;
       }
+
+      const userData = await response.json();
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
       setIsLoading(false);
-      return false;
+      return true;
     } catch (error) {
+      console.error("Ошибка регистрации:", error);
       setIsLoading(false);
       return false;
     }
@@ -97,6 +105,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         isAuthenticated: !!user,
+        isAdmin: user?.role === "ADMIN",
+        isTeacher: user?.role === "TEACHER",
+        isStudent: user?.role === "STUDENT",
         login,
         register,
         logout,

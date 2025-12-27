@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"STUDENT" | "TEACHER">("STUDENT");
   const [error, setError] = useState("");
 
   if (isAuthenticated) {
@@ -24,7 +25,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
-    const ok = await register(name, email, password);
+    const ok = await register(name, email, password, role);
     if (!ok) {
       setError("Проверьте корректность данных и длину пароля (мин. 6 символов).");
       return;
@@ -97,6 +98,34 @@ export default function RegisterPage() {
                     className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Минимум 6 символов"
                   />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Роль</label>
+                <div className="space-y-2">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="STUDENT"
+                      checked={role === "STUDENT"}
+                      onChange={(e) => setRole(e.target.value as "STUDENT" | "TEACHER")}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Ученик</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="TEACHER"
+                      checked={role === "TEACHER"}
+                      onChange={(e) => setRole(e.target.value as "STUDENT" | "TEACHER")}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Учитель</span>
+                  </label>
                 </div>
               </div>
 

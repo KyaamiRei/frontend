@@ -22,6 +22,9 @@
 - **Tailwind CSS** - утилитарный CSS фреймворк
 - **Lucide React** - иконки
 - **date-fns** - работа с датами
+- **PostgreSQL** - база данных
+- **Prisma** - ORM для работы с базой данных
+- **Docker** - контейнеризация базы данных
 
 ## Установка
 
@@ -31,38 +34,74 @@
 npm install
 ```
 
-2. Запустите dev сервер:
+2. Создайте файл `.env` в корне проекта:
+
+```env
+DATABASE_URL="postgresql://eduplatform:eduplatform123@localhost:5432/eduplatform?schema=public"
+NEXT_PUBLIC_API_URL=http://localhost:3000/api
+```
+
+3. Запустите базу данных в Docker:
+
+```bash
+docker-compose up -d
+```
+
+4. Создайте схему базы данных и примените миграции:
+
+```bash
+npm run db:generate
+npm run db:push
+```
+
+5. Заполните базу данных тестовыми данными (опционально):
+
+```bash
+npm run db:seed
+```
+
+6. Запустите dev сервер:
 
 ```bash
 npm run dev
 ```
 
-3. Откройте [http://localhost:3000](http://localhost:3000) в браузере
+7. Откройте [http://localhost:3000](http://localhost:3000) в браузере
 
 ## Структура проекта
 
 ```
-src/
-├── components/          # Переиспользуемые компоненты
-│   ├── Layout.tsx      # Основной layout
-│   ├── Header.tsx      # Шапка сайта
-│   ├── Footer.tsx      # Подвал сайта
-│   ├── CourseCard.tsx  # Карточка курса
-│   └── WebinarCard.tsx # Карточка вебинара
-├── contexts/           # React контексты
-│   └── FavoritesContext.tsx # Контекст для управления избранным
-├── pages/              # Страницы приложения
-│   ├── index.tsx       # Главная страница
-│   ├── courses/        # Страницы курсов
-│   │   ├── index.tsx   # Каталог курсов с фильтрацией
-│   │   └── [id].tsx    # Детальная страница курса с отзывами
-│   ├── webinars/       # Страницы вебинаров
-│   ├── profile.tsx     # Профиль пользователя с прогресс-барами и достижениями
-│   ├── favorites.tsx   # Страница избранного
-│   ├── notifications.tsx # Страница уведомлений
-│   └── about.tsx       # О нас
-└── styles/             # Глобальные стили
-    └── globals.css
+├── prisma/              # Prisma схема и миграции
+│   ├── schema.prisma   # Схема базы данных
+│   └── seed.ts         # Скрипт для заполнения тестовыми данными
+├── lib/                 # Утилиты
+│   └── prisma.ts       # Экземпляр Prisma Client
+├── src/
+│   ├── components/     # Переиспользуемые компоненты
+│   │   ├── Layout.tsx
+│   │   ├── Header.tsx
+│   │   ├── Footer.tsx
+│   │   ├── CourseCard.tsx
+│   │   └── WebinarCard.tsx
+│   ├── contexts/       # React контексты
+│   │   ├── AuthContext.tsx
+│   │   ├── CoursesContext.tsx
+│   │   ├── WebinarsContext.tsx
+│   │   └── FavoritesContext.tsx
+│   ├── pages/          # Страницы и API routes
+│   │   ├── api/        # API endpoints
+│   │   │   ├── auth/   # Аутентификация
+│   │   │   ├── courses/ # API для курсов
+│   │   │   ├── webinars/ # API для вебинаров
+│   │   │   └── favorites/ # API для избранного
+│   │   ├── index.tsx
+│   │   ├── courses/
+│   │   ├── webinars/
+│   │   └── ...
+│   └── styles/
+│       └── globals.css
+├── docker-compose.yml  # Конфигурация Docker для PostgreSQL
+└── .env                 # Переменные окружения
 ```
 
 ## Скрипты
@@ -71,6 +110,33 @@ src/
 - `npm run build` - сборка для продакшена
 - `npm start` - запуск production сервера
 - `npm run lint` - проверка кода линтером
+- `npm run db:generate` - генерация Prisma Client
+- `npm run db:push` - применение изменений схемы к базе данных
+- `npm run db:migrate` - создание и применение миграций
+- `npm run db:seed` - заполнение базы данных тестовыми данными
+- `npm run db:studio` - открытие Prisma Studio для просмотра данных
+
+## Работа с базой данных
+
+### Запуск базы данных
+
+```bash
+docker-compose up -d
+```
+
+### Остановка базы данных
+
+```bash
+docker-compose down
+```
+
+### Просмотр данных в Prisma Studio
+
+```bash
+npm run db:studio
+```
+
+Откроется веб-интерфейс на [http://localhost:5555](http://localhost:5555) для просмотра и редактирования данных в базе.
 
 ## Лицензия
 

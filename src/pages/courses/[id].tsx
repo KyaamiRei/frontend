@@ -3,15 +3,18 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import Layout from "@/components/Layout";
 import { useCourses } from "@/contexts/CoursesContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Clock, Users, Star, Play, CheckCircle } from "lucide-react";
 
 export default function CourseDetail() {
   const router = useRouter();
   const { id } = router.query;
-  const { getCourseById } = useCourses();
+  const { getCourseById, addReview } = useCourses();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<"overview" | "lessons" | "reviews">("overview");
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   const course = id ? getCourseById(id as string) : undefined;
 
@@ -205,17 +208,27 @@ export default function CourseDetail() {
                           />
                         </div>
                         <button
-                          onClick={() => {
-                            if (reviewText.trim()) {
-                              alert(
-                                "Отзыв отправлен! (В реальном приложении здесь будет API запрос)",
-                              );
-                              setReviewText("");
-                              setReviewRating(5);
+                          onClick={async () => {
+                            if (!user) {
+                              alert("Необходимо войти в систему для добавления отзыва");
+                              return;
+                            }
+                            if (reviewText.trim() && id) {
+                              setIsSubmittingReview(true);
+                              try {
+                                await addReview(id as string, user.id, reviewRating, reviewText);
+                                setReviewText("");
+                                setReviewRating(5);
+                              } catch (error) {
+                                alert("Ошибка при добавлении отзыва");
+                              } finally {
+                                setIsSubmittingReview(false);
+                              }
                             }
                           }}
-                          className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">
-                          Отправить отзыв
+                          disabled={isSubmittingReview || !reviewText.trim()}
+                          className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                          {isSubmittingReview ? "Отправка..." : "Отправить отзыв"}
                         </button>
                       </div>
                     </div>
@@ -230,7 +243,7 @@ export default function CourseDetail() {
                             <div>
                               <h4 className="font-semibold text-gray-800">{review.author}</h4>
                               <p className="text-sm text-gray-500">
-                                {review.date.toLocaleDateString("ru-RU", {
+                                {new Date(review.date).toLocaleDateString("ru-RU", {
                                   year: "numeric",
                                   month: "long",
                                   day: "numeric",

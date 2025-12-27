@@ -13,188 +13,171 @@ export interface Course {
   price: number;
   image?: string;
   lessons?: Array<{
-    id: number;
+    id: string;
     title: string;
     duration: string;
     completed?: boolean;
   }>;
   reviews?: Array<{
-    id: number;
+    id: string;
     author: string;
     rating: number;
-    date: Date;
+    date: Date | string;
     text: string;
   }>;
 }
 
 interface CoursesContextType {
   courses: Course[];
-  addCourse: (course: Omit<Course, "id" | "students" | "rating">) => Course;
-  updateCourse: (id: string, course: Partial<Course>) => void;
-  deleteCourse: (id: string) => void;
+  isLoading: boolean;
+  addCourse: (course: Omit<Course, "id" | "students" | "rating">) => Promise<Course>;
+  updateCourse: (id: string, course: Partial<Course>) => Promise<void>;
+  deleteCourse: (id: string) => Promise<void>;
   getCourseById: (id: string) => Course | undefined;
+  refreshCourses: () => Promise<void>;
+  addReview: (courseId: string, userId: string, rating: number, text: string) => Promise<void>;
 }
 
 const CoursesContext = createContext<CoursesContextType | undefined>(undefined);
 
-// Начальные данные
-const initialCourses: Course[] = [
-  {
-    id: "1",
-    title: "Основы веб-разработки",
-    description: "Изучите HTML, CSS и JavaScript с нуля. Создайте свои первые веб-приложения.",
-    fullDescription:
-      "Этот курс предназначен для начинающих разработчиков, которые хотят освоить основы веб-разработки. Вы изучите HTML для структуры, CSS для стилизации и JavaScript для интерактивности. К концу курса вы сможете создавать полноценные веб-приложения.",
-    instructor: "Иван Петров",
-    duration: "40 часов",
-    students: 1250,
-    rating: 4.8,
-    category: "Веб-разработка",
-    price: 0,
-    lessons: [
-      { id: 1, title: "Введение в HTML", duration: "45 мин", completed: false },
-      { id: 2, title: "Структура HTML документа", duration: "50 мин", completed: false },
-      { id: 3, title: "Основы CSS", duration: "60 мин", completed: false },
-      { id: 4, title: "Flexbox и Grid", duration: "70 мин", completed: false },
-      { id: 5, title: "Введение в JavaScript", duration: "55 мин", completed: false },
-      { id: 6, title: "DOM манипуляции", duration: "65 мин", completed: false },
-    ],
-    reviews: [
-      {
-        id: 1,
-        author: "Алексей Смирнов",
-        rating: 5,
-        date: new Date("2024-12-10"),
-        text: "Отличный курс для начинающих! Все объясняется очень понятно, много практических примеров. Рекомендую!",
-      },
-      {
-        id: 2,
-        author: "Мария Козлова",
-        rating: 5,
-        date: new Date("2024-12-08"),
-        text: "Преподаватель очень опытный, материал подается структурированно. Уже после первых уроков смогла создать свой первый сайт.",
-      },
-    ],
-  },
-  {
-    id: "2",
-    title: "Python для начинающих",
-    description: "Полный курс по программированию на Python. От основ до продвинутых тем.",
-    instructor: "Мария Сидорова",
-    duration: "60 часов",
-    students: 2100,
-    rating: 4.9,
-    category: "Программирование",
-    price: 2999,
-  },
-  {
-    id: "3",
-    title: "Дизайн интерфейсов",
-    description: "Изучите принципы UI/UX дизайна и создавайте красивые интерфейсы.",
-    instructor: "Алексей Козлов",
-    duration: "35 часов",
-    students: 890,
-    rating: 4.7,
-    category: "Дизайн",
-    price: 2499,
-  },
-  {
-    id: "4",
-    title: "React и современный JavaScript",
-    description: "Освойте React, хуки, контекст и создание полноценных приложений.",
-    instructor: "Сергей Иванов",
-    duration: "50 часов",
-    students: 1800,
-    rating: 4.9,
-    category: "Веб-разработка",
-    price: 3499,
-  },
-  {
-    id: "5",
-    title: "Базы данных и SQL",
-    description: "Изучите проектирование баз данных, SQL запросы и оптимизацию.",
-    instructor: "Ольга Смирнова",
-    duration: "30 часов",
-    students: 1100,
-    rating: 4.6,
-    category: "Базы данных",
-    price: 1999,
-  },
-  {
-    id: "6",
-    title: "Мобильная разработка",
-    description: "Создавайте мобильные приложения для iOS и Android.",
-    instructor: "Андрей Морозов",
-    duration: "70 часов",
-    students: 950,
-    rating: 4.8,
-    category: "Мобильная разработка",
-    price: 3999,
-  },
-];
-
 export const CoursesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [courses, setCourses] = useState<Course[]>(initialCourses);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Загрузка из localStorage при монтировании
-  useEffect(() => {
-    const savedCourses = localStorage.getItem("courses");
-    if (savedCourses) {
-      try {
-        const parsed = JSON.parse(savedCourses);
-        // Преобразуем даты в reviews
-        const coursesWithDates = parsed.map((course: Course) => ({
-          ...course,
-          reviews: course.reviews?.map((review: any) => ({
-            ...review,
-            date: new Date(review.date),
-          })),
-        }));
-        setCourses(coursesWithDates);
-      } catch (error) {
-        console.error("Ошибка загрузки курсов:", error);
+  // Загрузка курсов из API
+  const fetchCourses = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/courses");
+      if (!response.ok) {
+        throw new Error("Ошибка загрузки курсов");
       }
+      const data = await response.json();
+      // Преобразуем даты в reviews
+      const coursesWithDates = data.map((course: Course) => ({
+        ...course,
+        reviews: course.reviews?.map((review: any) => ({
+          ...review,
+          date: new Date(review.date),
+        })),
+      }));
+      setCourses(coursesWithDates);
+    } catch (error) {
+      console.error("Ошибка загрузки курсов:", error);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchCourses();
   }, []);
 
-  // Сохранение в localStorage при изменении
-  useEffect(() => {
-    localStorage.setItem("courses", JSON.stringify(courses));
-  }, [courses]);
+  const addCourse = async (courseData: Omit<Course, "id" | "students" | "rating">): Promise<Course> => {
+    try {
+      const response = await fetch("/api/courses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(courseData),
+      });
 
-  const addCourse = (courseData: Omit<Course, "id" | "students" | "rating">): Course => {
-    const newCourse: Course = {
-      ...courseData,
-      id: Date.now().toString(),
-      students: 0,
-      rating: 0,
-    };
-    setCourses((prev) => [...prev, newCourse]);
-    return newCourse;
+      if (!response.ok) {
+        throw new Error("Ошибка создания курса");
+      }
+
+      const newCourse = await response.json();
+      setCourses((prev) => [...prev, newCourse]);
+      return newCourse;
+    } catch (error) {
+      console.error("Ошибка создания курса:", error);
+      throw error;
+    }
   };
 
-  const updateCourse = (id: string, courseData: Partial<Course>) => {
-    setCourses((prev) =>
-      prev.map((course) => (course.id === id ? { ...course, ...courseData } : course)),
-    );
+  const updateCourse = async (id: string, courseData: Partial<Course>) => {
+    try {
+      const response = await fetch(`/api/courses/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(courseData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Ошибка обновления курса");
+      }
+
+      const updatedCourse = await response.json();
+      setCourses((prev) =>
+        prev.map((course) => (course.id === id ? { ...course, ...updatedCourse } : course)),
+      );
+    } catch (error) {
+      console.error("Ошибка обновления курса:", error);
+      throw error;
+    }
   };
 
-  const deleteCourse = (id: string) => {
-    setCourses((prev) => prev.filter((course) => course.id !== id));
+  const deleteCourse = async (id: string) => {
+    try {
+      const response = await fetch(`/api/courses/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Ошибка удаления курса");
+      }
+
+      setCourses((prev) => prev.filter((course) => course.id !== id));
+    } catch (error) {
+      console.error("Ошибка удаления курса:", error);
+      throw error;
+    }
   };
 
   const getCourseById = (id: string): Course | undefined => {
     return courses.find((course) => course.id === id);
   };
 
+  const refreshCourses = async () => {
+    await fetchCourses();
+  };
+
+  const addReview = async (courseId: string, userId: string, rating: number, text: string) => {
+    try {
+      const response = await fetch(`/api/courses/${courseId}/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, rating, text }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Ошибка добавления отзыва");
+      }
+
+      // Обновляем курс с новым отзывом
+      await refreshCourses();
+    } catch (error) {
+      console.error("Ошибка добавления отзыва:", error);
+      throw error;
+    }
+  };
+
   return (
     <CoursesContext.Provider
       value={{
         courses,
+        isLoading,
         addCourse,
         updateCourse,
         deleteCourse,
         getCourseById,
+        refreshCourses,
+        addReview,
       }}>
       {children}
     </CoursesContext.Provider>
