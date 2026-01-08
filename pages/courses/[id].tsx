@@ -1,0 +1,279 @@
+import React, { useState } from "react";
+import Head from "next/head";
+import { useRouter } from "next/router";
+import { Layout } from "@/components";
+import { useCourses } from "@/contexts/CoursesContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { Clock, Users, Star, Play, CheckCircle } from "lucide-react";
+
+export default function CourseDetail() {
+  const router = useRouter();
+  const { id } = router.query;
+  const { getCourseById, addReview } = useCourses();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<"overview" | "lessons" | "reviews">("overview");
+  const [reviewText, setReviewText] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  const course = id ? getCourseById(id as string) : undefined;
+
+  if (!course) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8">
+          <p>Курс не найден</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <>
+      <Head>
+        <title>{course.title} - EduPlatform</title>
+        <meta
+          name="description"
+          content={course.description}
+        />
+      </Head>
+      <Layout>
+        <div className="bg-gray-50">
+          <div className="container mx-auto px-4 py-8">
+            {/* Course Header */}
+            <div className="bg-white rounded-lg shadow-md p-8 mb-6">
+              <h1 className="text-4xl font-bold text-gray-800 mb-4">{course.title}</h1>
+              <p className="text-xl text-gray-600 mb-6">{course.description}</p>
+
+              <div className="flex flex-wrap items-center gap-6 mb-6">
+                <div className="flex items-center space-x-2">
+                  <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                  <span className="text-lg font-semibold">{course.rating}</span>
+                </div>
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <Users className="w-5 h-5" />
+                  <span>{course.students} студентов</span>
+                </div>
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <Clock className="w-5 h-5" />
+                  <span>{course.duration}</span>
+                </div>
+                <div className="text-gray-600">
+                  Преподаватель: <span className="font-semibold">{course.instructor}</span>
+                </div>
+              </div>
+
+              <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                Записаться на курс
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="bg-white rounded-lg shadow-md">
+              <div className="border-b">
+                <div className="flex space-x-4 px-8">
+                  <button
+                    onClick={() => setActiveTab("overview")}
+                    className={`py-4 px-2 border-b-2 font-semibold transition ${
+                      activeTab === "overview"
+                        ? "border-blue-600 text-blue-600"
+                        : "border-transparent text-gray-600 hover:text-gray-800"
+                    }`}>
+                    Описание
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("lessons")}
+                    className={`py-4 px-2 border-b-2 font-semibold transition ${
+                      activeTab === "lessons"
+                        ? "border-blue-600 text-blue-600"
+                        : "border-transparent text-gray-600 hover:text-gray-800"
+                    }`}>
+                    Уроки ({course.lessons?.length ?? 0})
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("reviews")}
+                    className={`py-4 px-2 border-b-2 font-semibold transition ${
+                      activeTab === "reviews"
+                        ? "border-blue-600 text-blue-600"
+                        : "border-transparent text-gray-600 hover:text-gray-800"
+                    }`}>
+                    Отзывы ({course.reviews?.length || 0})
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-8">
+                {activeTab === "overview" && (
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4">О курсе</h2>
+                    <p className="text-gray-600 leading-relaxed mb-6">{course.fullDescription}</p>
+
+                    <h3 className="text-xl font-semibold text-gray-800 mb-3">Чему вы научитесь:</h3>
+                    <ul className="space-y-2 text-gray-600">
+                      <li className="flex items-start">
+                        <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>Создавать структурированные HTML документы</span>
+                      </li>
+                      <li className="flex items-start">
+                        <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>Стилизовать веб-страницы с помощью CSS</span>
+                      </li>
+                      <li className="flex items-start">
+                        <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>Добавлять интерактивность с JavaScript</span>
+                      </li>
+                      <li className="flex items-start">
+                        <CheckCircle className="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>Работать с DOM и событиями</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+
+                {activeTab === "lessons" && (
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Программа курса</h2>
+                    <div className="space-y-3">
+                      {course.lessons?.map((lesson: any, index: number) => (
+                        <div
+                          key={lesson.id}
+                          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                          <div className="flex items-center space-x-4 flex-1">
+                            <div className="flex-shrink-0">
+                              {lesson.completed ? (
+                                <CheckCircle className="w-6 h-6 text-green-500" />
+                              ) : (
+                                <div className="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
+                                  <span className="text-xs text-gray-500">{index + 1}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-800">{lesson.title}</h3>
+                              <div className="flex items-center space-x-2 text-sm text-gray-500 mt-1">
+                                <Clock className="w-4 h-4" />
+                                <span>{lesson.duration}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium">
+                            <Play className="w-5 h-5" />
+                            <span>Смотреть</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "reviews" && (
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Отзывы студентов</h2>
+
+                    {/* Add Review Form */}
+                    <div className="bg-gray-50 rounded-lg p-6 mb-8">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Оставить отзыв</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Ваша оценка
+                          </label>
+                          <div className="flex space-x-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                onClick={() => setReviewRating(star)}
+                                type="button">
+                                <Star
+                                  className={`w-6 h-6 ${
+                                    star <= reviewRating
+                                      ? "text-yellow-400 fill-current"
+                                      : "text-gray-300"
+                                  }`}
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Ваш отзыв
+                          </label>
+                          <textarea
+                            value={reviewText}
+                            onChange={(e) => setReviewText(e.target.value)}
+                            placeholder="Поделитесь своими впечатлениями о курсе..."
+                            rows={4}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <button
+                          onClick={async () => {
+                            if (!user) {
+                              alert("Необходимо войти в систему для добавления отзыва");
+                              return;
+                            }
+                            if (reviewText.trim() && id) {
+                              setIsSubmittingReview(true);
+                              try {
+                                await addReview(id as string, user.id, reviewRating, reviewText);
+                                setReviewText("");
+                                setReviewRating(5);
+                              } catch (error) {
+                                alert("Ошибка при добавлении отзыва");
+                              } finally {
+                                setIsSubmittingReview(false);
+                              }
+                            }
+                          }}
+                          disabled={isSubmittingReview || !reviewText.trim()}
+                          className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                          {isSubmittingReview ? "Отправка..." : "Отправить отзыв"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Reviews List */}
+                    <div className="space-y-6">
+                      {course.reviews?.map((review: any) => (
+                        <div
+                          key={review.id}
+                          className="border-b border-gray-200 pb-6 last:border-b-0 last:pb-0">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h4 className="font-semibold text-gray-800">{review.author}</h4>
+                              <p className="text-sm text-gray-500">
+                                {new Date(review.date).toLocaleDateString("ru-RU", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                })}
+                              </p>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`w-5 h-5 ${
+                                    star <= review.rating
+                                      ? "text-yellow-400 fill-current"
+                                      : "text-gray-300"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-gray-600 leading-relaxed">{review.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    </>
+  );
+}

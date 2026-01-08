@@ -1,31 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-
-export interface Course {
-  id: string;
-  title: string;
-  description: string;
-  fullDescription?: string;
-  instructor: string;
-  duration: string;
-  students: number;
-  rating: number;
-  category: string;
-  price: number;
-  image?: string;
-  lessons?: Array<{
-    id: string;
-    title: string;
-    duration: string;
-    completed?: boolean;
-  }>;
-  reviews?: Array<{
-    id: string;
-    author: string;
-    rating: number;
-    date: Date | string;
-    text: string;
-  }>;
-}
+import type { Course } from "@/types";
 
 interface CoursesContextType {
   courses: Course[];
@@ -73,7 +47,9 @@ export const CoursesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     fetchCourses();
   }, []);
 
-  const addCourse = async (courseData: Omit<Course, "id" | "students" | "rating">): Promise<Course> => {
+  const addCourse = async (
+    courseData: Omit<Course, "id" | "students" | "rating">,
+  ): Promise<Course> => {
     try {
       const response = await fetch("/api/courses", {
         method: "POST",

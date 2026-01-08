@@ -1,19 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-
-export interface Webinar {
-  id: string;
-  title: string;
-  description: string;
-  fullDescription?: string;
-  instructor: string;
-  instructorBio?: string;
-  date: Date | string;
-  duration: string;
-  participants: number;
-  isLive?: boolean;
-  topics?: string[];
-  category?: string;
-}
+import type { Webinar } from "@/types";
 
 interface WebinarsContextType {
   webinars: Webinar[];
@@ -57,7 +43,9 @@ export const WebinarsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     fetchWebinars();
   }, []);
 
-  const addWebinar = async (webinarData: Omit<Webinar, "id" | "participants">): Promise<Webinar> => {
+  const addWebinar = async (
+    webinarData: Omit<Webinar, "id" | "participants">,
+  ): Promise<Webinar> => {
     try {
       const response = await fetch("/api/webinars", {
         method: "POST",
@@ -103,9 +91,7 @@ export const WebinarsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         ...updatedWebinar,
         date: new Date(updatedWebinar.date),
       };
-      setWebinars((prev) =>
-        prev.map((webinar) => (webinar.id === id ? webinarWithDate : webinar)),
-      );
+      setWebinars((prev) => prev.map((webinar) => (webinar.id === id ? webinarWithDate : webinar)));
     } catch (error) {
       console.error("Ошибка обновления вебинара:", error);
       throw error;
