@@ -1,14 +1,17 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { Layout, CourseCard, WebinarCard } from "@/components";
 import { useCourses } from "@/contexts/CoursesContext";
 import { useWebinars } from "@/contexts/WebinarsContext";
-import { BookOpen, Video, TrendingUp, Award } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { BookOpen, Video, TrendingUp, Award, Sparkles } from "lucide-react";
 
 export default function Home() {
   const { courses } = useCourses();
   const { webinars } = useWebinars();
+  const { user } = useAuth();
+  const [recommendedCourses, setRecommendedCourses] = useState<any[]>([]);
 
   // Получаем топ-3 курса по рейтингу
   const featuredCourses = [...courses].sort((a, b) => b.rating - a.rating).slice(0, 3);
@@ -19,6 +22,62 @@ export default function Home() {
     .filter((w) => w.date > now)
     .sort((a, b) => a.date.getTime() - b.date.getTime())
     .slice(0, 2);
+
+  // Функция для получения рекомендаций на основе интересов
+  useEffect(() => {
+    const getRecommendedCourses = () => {
+      if (!user?.interests || user.interests.length === 0) {
+        setRecommendedCourses([]);
+        return;
+      }
+
+      // Маппинг интересов на категории курсов
+      const interestToCategory: { [key: string]: string[] } = {
+        "Веб-разработка": ["Веб-разработка", "Программирование"],
+        "Мобильная разработка": ["Мобильная разработка", "Программирование"],
+        "Базы данных": ["Базы данных", "Программирование"],
+        "Машинное обучение": ["Программирование"],
+        "UI/UX дизайн": ["Дизайн"],
+        "Графический дизайн": ["Дизайн"],
+        "Веб-дизайн": ["Дизайн", "Веб-разработка"],
+        "Начинающий": [],
+        "Средний": [],
+        "Продвинутый": [],
+        "Эксперт": [],
+        "Видео-уроки": [],
+        "Интерактивные задания": [],
+        "Смешанный формат": [],
+        "1-3 часа": [],
+        "4-7 часов": [],
+        "8-15 часов": [],
+        "Более 15 часов": [],
+        "Не интересует": [],
+      };
+
+      // Собираем все релевантные категории
+      const relevantCategories = new Set<string>();
+      user.interests.forEach((interest) => {
+        const categories = interestToCategory[interest] || [];
+        categories.forEach((cat) => relevantCategories.add(cat));
+      });
+
+      // Фильтруем курсы по релевантным категориям
+      const recommended = courses
+        .filter((course) => {
+          // Проверяем, соответствует ли категория курса интересам
+          return relevantCategories.has(course.category);
+        })
+        .sort((a, b) => {
+          // Сортируем по рейтингу
+          return b.rating - a.rating;
+        })
+        .slice(0, 6); // Берем топ-6 рекомендованных курсов
+
+      setRecommendedCourses(recommended);
+    };
+
+    getRecommendedCourses();
+  }, [user?.interests, courses]);
 
   return (
     <>
@@ -86,6 +145,36 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* Recommended Courses */}
+        {recommendedCourses.length > 0 && (
+          <section className="py-16 bg-gradient-to-r from-purple-50 to-blue-50">
+            <div className="container mx-auto px-4">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center space-x-3">
+                  <Sparkles className="w-8 h-8 text-purple-600" />
+                  <h2 className="text-3xl font-bold text-gray-800">Рекомендуемые курсы для вас</h2>
+                </div>
+                <Link
+                  href="/courses"
+                  className="text-blue-600 hover:text-blue-700 font-semibold">
+                  Смотреть все →
+                </Link>
+              </div>
+              <p className="text-gray-600 mb-6">
+                Мы подобрали эти курсы специально для вас на основе ваших интересов
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {recommendedCourses.map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    {...course}
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Featured Courses */}
         <section className="py-16">

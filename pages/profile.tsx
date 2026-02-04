@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { Layout } from "@/components";
@@ -6,15 +6,71 @@ import { User, BookOpen, Video, Award, Settings, Trophy, Target, TrendingUp } fr
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
+interface Enrollment {
+  id: string;
+  userId: string;
+  courseId: string;
+  progress: number;
+  createdAt: string;
+  updatedAt: string;
+  course: {
+    id: string;
+    title: string;
+    description: string;
+    instructor: string;
+    duration: string;
+    category: string;
+    rating: number;
+    students: number;
+    lessons: Array<{
+      id: string;
+      title: string;
+      duration: string;
+      order: number;
+    }>;
+    totalLessons: number;
+  };
+}
+
 export default function Profile() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [enrollmentsLoading, setEnrollmentsLoading] = useState(true);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.replace("/login");
     }
   }, [isLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    const fetchEnrollments = async () => {
+      if (!user?.id) {
+        setEnrollmentsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/enrollments?userId=${user.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setEnrollments(data);
+        }
+      } catch (error) {
+        console.error("Ошибка загрузки результатов прохождения курсов:", error);
+      } finally {
+        setEnrollmentsLoading(false);
+      }
+    };
+
+    if (user?.id) {
+      fetchEnrollments();
+    }
+  }, [user?.id]);
+
+  const activeCourses = enrollments.filter((e) => e.progress < 100);
+  const completedCourses = enrollments.filter((e) => e.progress >= 100);
 
   if (isLoading || (!isAuthenticated && typeof window !== "undefined")) {
     return (
@@ -64,7 +120,9 @@ export default function Profile() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-500 text-sm mb-1">Активных курсов</p>
-                    <p className="text-3xl font-bold text-gray-800">5</p>
+                    <p className="text-3xl font-bold text-gray-800">
+                      {enrollmentsLoading ? "..." : activeCourses.length}
+                    </p>
                   </div>
                   <BookOpen className="w-12 h-12 text-blue-600" />
                 </div>
@@ -73,7 +131,9 @@ export default function Profile() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-500 text-sm mb-1">Завершено курсов</p>
-                    <p className="text-3xl font-bold text-gray-800">12</p>
+                    <p className="text-3xl font-bold text-gray-800">
+                      {enrollmentsLoading ? "..." : completedCourses.length}
+                    </p>
                   </div>
                   <Award className="w-12 h-12 text-green-600" />
                 </div>
@@ -81,8 +141,10 @@ export default function Profile() {
               <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-500 text-sm mb-1">Посещено вебинаров</p>
-                    <p className="text-3xl font-bold text-gray-800">8</p>
+                    <p className="text-gray-500 text-sm mb-1">Всего курсов</p>
+                    <p className="text-3xl font-bold text-gray-800">
+                      {enrollmentsLoading ? "..." : enrollments.length}
+                    </p>
                   </div>
                   <Video className="w-12 h-12 text-purple-600" />
                 </div>
@@ -92,83 +154,80 @@ export default function Profile() {
             {/* My Courses */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">Мои курсы</h2>
+                <h2 className="text-2xl font-bold text-gray-800">Результаты прохождения курсов</h2>
                 <Link
                   href="/courses"
                   className="text-blue-600 hover:text-blue-700 font-medium text-sm">
                   Все курсы →
                 </Link>
               </div>
-              <div className="space-y-4">
-                <div className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800 mb-1">Основы веб-разработки</h3>
-                      <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        <span>Прогресс: 60%</span>
-                        <span>•</span>
-                        <span>6 из 10 уроков</span>
-                      </div>
-                    </div>
-                    <Link
-                      href="/courses/1"
-                      className="text-blue-600 hover:text-blue-700 font-medium">
-                      Продолжить
-                    </Link>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full"
-                      style={{ width: "60%" }}></div>
-                  </div>
+              {enrollmentsLoading ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Загрузка результатов...</p>
                 </div>
-                <div className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800 mb-1">Python для начинающих</h3>
-                      <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        <span>Прогресс: 30%</span>
-                        <span>•</span>
-                        <span>3 из 10 уроков</span>
-                      </div>
-                    </div>
-                    <Link
-                      href="/courses/2"
-                      className="text-blue-600 hover:text-blue-700 font-medium">
-                      Продолжить
-                    </Link>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full"
-                      style={{ width: "30%" }}></div>
-                  </div>
+              ) : enrollments.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">Вы еще не записаны ни на один курс</p>
+                  <Link
+                    href="/courses"
+                    className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    Выбрать курс
+                  </Link>
                 </div>
-                <div className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800 mb-1">
-                        React и современный JavaScript
-                      </h3>
-                      <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        <span>Прогресс: 80%</span>
-                        <span>•</span>
-                        <span>8 из 10 уроков</span>
+              ) : (
+                <div className="space-y-4">
+                  {enrollments.map((enrollment) => {
+                    const progressPercent = Math.round(enrollment.progress);
+                    const completedLessons = Math.round(
+                      (enrollment.progress / 100) * enrollment.course.totalLessons,
+                    );
+                    const isCompleted = enrollment.progress >= 100;
+
+                    return (
+                      <div
+                        key={enrollment.id}
+                        className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-800 mb-1">
+                              {enrollment.course.title}
+                            </h3>
+                            <div className="flex items-center space-x-2 text-sm text-gray-500">
+                              <span>Прогресс: {progressPercent}%</span>
+                              <span>•</span>
+                              <span>
+                                {completedLessons} из {enrollment.course.totalLessons} уроков
+                              </span>
+                              {isCompleted && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-green-600 font-medium">Завершено</span>
+                                </>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              Категория: {enrollment.course.category} • Преподаватель:{" "}
+                              {enrollment.course.instructor}
+                            </div>
+                          </div>
+                          <Link
+                            href={`/courses/${enrollment.courseId}`}
+                            className="text-blue-600 hover:text-blue-700 font-medium">
+                            {isCompleted ? "Просмотреть" : "Продолжить"}
+                          </Link>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all ${
+                              isCompleted ? "bg-green-600" : "bg-blue-600"
+                            }`}
+                            style={{ width: `${progressPercent}%` }}></div>
+                        </div>
                       </div>
-                    </div>
-                    <Link
-                      href="/courses/4"
-                      className="text-blue-600 hover:text-blue-700 font-medium">
-                      Продолжить
-                    </Link>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-green-600 h-2 rounded-full"
-                      style={{ width: "80%" }}></div>
-                  </div>
+                    );
+                  })}
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Achievements */}

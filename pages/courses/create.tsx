@@ -33,12 +33,14 @@ export default function CreateCourse() {
     price: "0",
   });
 
-  // Редирект, если не авторизован
+  // Редирект, если не авторизован или не имеет прав
   React.useEffect(() => {
     if (!isAuthenticated) {
       router.replace("/login?redirect=/courses/create");
+    } else if (user && user.role !== "ADMIN" && user.role !== "TEACHER") {
+      router.replace("/courses");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, user, router]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -93,7 +95,7 @@ export default function CreateCourse() {
     }
   };
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || (user && user.role !== "ADMIN" && user.role !== "TEACHER")) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">

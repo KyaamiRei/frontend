@@ -1,22 +1,112 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { Layout } from "@/components";
 import { useCourses } from "@/contexts/CoursesContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Clock, Users, Star, Play, CheckCircle } from "lucide-react";
+import { Clock, Users, Star, Play, CheckCircle, BookOpen } from "lucide-react";
+import Link from "next/link";
+
+interface Enrollment {
+  enrolled: boolean;
+  progress?: number;
+  course?: {
+    totalLessons?: number;
+  };
+}
 
 export default function CourseDetail() {
   const router = useRouter();
   const { id } = router.query;
   const { getCourseById, addReview } = useCourses();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<"overview" | "lessons" | "reviews">("overview");
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
+  const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(true);
+  const [isEnrolling, setIsEnrolling] = useState(false);
+  const [courseStudents, setCourseStudents] = useState<number | null>(null);
 
   const course = id ? getCourseById(id as string) : undefined;
+
+  // Проверяем запись на курс при загрузке
+  useEffect(() => {
+    const checkEnrollment = async () => {
+      if (!id || !user?.id) {
+        setIsCheckingEnrollment(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/enrollments/check?userId=${user.id}&courseId=${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setEnrollment(data);
+          if (data.enrolled && course) {
+            setCourseStudents(course.students);
+          }
+        }
+      } catch (error) {
+        console.error("Ошибка проверки записи на курс:", error);
+      } finally {
+        setIsCheckingEnrollment(false);
+      }
+    };
+
+    if (course && user?.id) {
+      setCourseStudents(course.students);
+      checkEnrollment();
+    } else {
+      setIsCheckingEnrollment(false);
+      if (course) {
+        setCourseStudents(course.students);
+      }
+    }
+  }, [id, user?.id, course]);
+
+  const handleEnroll = async () => {
+    if (!user) {
+      router.push(`/login?redirect=/courses/${id}`);
+      return;
+    }
+
+    if (!id) return;
+
+    setIsEnrolling(true);
+    try {
+      const response = await fetch("/api/enrollments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          courseId: id,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEnrollment({ enrolled: true, progress: 0, course: data.course });
+        const newStudentsCount = (courseStudents !== null ? courseStudents : course?.students || 0) + 1;
+        setCourseStudents(newStudentsCount);
+        // Обновляем курс в контексте
+        if (course) {
+          course.students = newStudentsCount;
+        }
+      } else {
+        const error = await response.json();
+        alert(error.error || "Ошибка при записи на курс");
+      }
+    } catch (error) {
+      console.error("Ошибка записи на курс:", error);
+      alert("Ошибка при записи на курс");
+    } finally {
+      setIsEnrolling(false);
+    }
+  };
 
   if (!course) {
     return (
@@ -52,7 +142,7 @@ export default function CourseDetail() {
                 </div>
                 <div className="flex items-center space-x-2 text-gray-600">
                   <Users className="w-5 h-5" />
-                  <span>{course.students} студентов</span>
+                  <span>{courseStudents !== null ? courseStudents : course.students} студентов</span>
                 </div>
                 <div className="flex items-center space-x-2 text-gray-600">
                   <Clock className="w-5 h-5" />
@@ -63,9 +153,56 @@ export default function CourseDetail() {
                 </div>
               </div>
 
-              <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
-                Записаться на курс
-              </button>
+              {isCheckingEnrollment ? (
+                <button
+                  disabled
+                  className="bg-gray-400 text-white px-8 py-3 rounded-lg font-semibold cursor-not-allowed">
+                  Загрузка...
+                </button>
+              ) : enrollment?.enrolled ? (
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2 text-green-600 font-semibold">
+                    <CheckCircle className="w-5 h-5" />
+                    <span>Вы записаны на этот курс</span>
+                  </div>
+                  {enrollment.progress !== undefined && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm text-gray-600">
+                        <span>Прогресс прохождения</span>
+                        <span className="font-semibold">{Math.round(enrollment.progress)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div
+                          className={`h-3 rounded-full transition-all ${
+                            enrollment.progress >= 100 ? "bg-green-600" : "bg-blue-600"
+                          }`}
+                          style={{ width: `${enrollment.progress}%` }}></div>
+                      </div>
+                    </div>
+                  )}
+                  <Link
+                    href="/profile"
+                    className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    Перейти к моим курсам
+                  </Link>
+                </div>
+              ) : !isAuthenticated ? (
+                <div className="space-y-3">
+                  <p className="text-gray-600">Для записи на курс необходимо войти в систему</p>
+                  <Link
+                    href={`/login?redirect=/courses/${id}`}
+                    className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    Войти
+                  </Link>
+                </div>
+              ) : (
+                <button
+                  onClick={handleEnroll}
+                  disabled={isEnrolling}
+                  className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                  {isEnrolling ? "Записываем..." : "Записаться на курс"}
+                </button>
+              )}
             </div>
 
             {/* Tabs */}

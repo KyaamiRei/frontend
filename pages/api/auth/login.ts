@@ -28,7 +28,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Возвращаем пользователя без пароля
       const { password: _, ...userWithoutPassword } = user;
 
-      res.status(200).json(userWithoutPassword);
+      res.status(200).json({
+        ...userWithoutPassword,
+        interests: user.interests || [],
+        hasCompletedTest: user.hasCompletedTest || false,
+      });
     } catch (error) {
       console.error("Ошибка входа:", error);
       res.status(500).json({ error: "Ошибка входа" });

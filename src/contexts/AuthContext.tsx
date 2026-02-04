@@ -12,7 +12,6 @@ interface AuthContextType {
     name: string,
     email: string,
     password: string,
-    role: "STUDENT" | "TEACHER",
   ) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
@@ -50,8 +49,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const userData = await response.json();
-      setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
+      // Убеждаемся, что interests и hasCompletedTest присутствуют
+      const userWithInterests = {
+        ...userData,
+        interests: userData.interests || [],
+        hasCompletedTest: userData.hasCompletedTest || false,
+      };
+      setUser(userWithInterests);
+      localStorage.setItem("user", JSON.stringify(userWithInterests));
       setIsLoading(false);
       return true;
     } catch (error) {
@@ -65,7 +70,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     name: string,
     email: string,
     password: string,
-    role: "STUDENT" | "TEACHER",
   ): Promise<boolean> => {
     setIsLoading(true);
     try {
@@ -74,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({ name, email, password }),
       });
 
       if (!response.ok) {
@@ -83,8 +87,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const userData = await response.json();
-      setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
+      // Убеждаемся, что interests и hasCompletedTest присутствуют
+      const userWithInterests = {
+        ...userData,
+        interests: userData.interests || [],
+        hasCompletedTest: userData.hasCompletedTest || false,
+      };
+      setUser(userWithInterests);
+      localStorage.setItem("user", JSON.stringify(userWithInterests));
       setIsLoading(false);
       return true;
     } catch (error) {

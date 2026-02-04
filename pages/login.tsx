@@ -30,7 +30,19 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/profile");
+    // Проверяем, прошел ли пользователь тест интересов
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      if (!user.hasCompletedTest) {
+        router.push("/interest-test");
+        return;
+      }
+    }
+
+    // Получаем redirect из query параметров, если есть
+    const redirect = router.query.redirect as string;
+    router.push(redirect || "/profile");
   };
 
   return (

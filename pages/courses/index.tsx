@@ -17,7 +17,7 @@ const categories = [
 
 export default function Courses() {
   const { courses } = useCourses();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Все");
   const [minRating, setMinRating] = useState(0);
@@ -55,7 +55,7 @@ export default function Courses() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-4xl font-bold text-gray-800">Каталог курсов</h1>
-            {isAuthenticated && (
+            {isAuthenticated && (user?.role === "ADMIN" || user?.role === "TEACHER") && (
               <Link
                 href="/courses/create"
                 className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">

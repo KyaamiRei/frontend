@@ -1,37 +1,33 @@
 import React, { useState, FormEvent } from "react";
 import Head from "next/head";
-import { useRouter } from "next/router";
 import { Layout } from "@/components";
 import { useAuth } from "@/contexts/AuthContext";
 import { Mail, Lock, User as UserIcon } from "lucide-react";
+import Link from "next/link";
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const { register, isLoading, isAuthenticated } = useAuth();
+  const { register, isLoading } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"STUDENT" | "TEACHER">("STUDENT");
   const [error, setError] = useState("");
-
-  if (isAuthenticated) {
-    if (typeof window !== "undefined") {
-      router.replace("/profile");
-    }
-  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
 
-    const ok = await register(name, email, password, role);
+    const ok = await register(name, email, password);
     if (!ok) {
       setError("Проверьте корректность данных и длину пароля (мин. 6 символов).");
       return;
     }
 
-    router.push("/profile");
+    // Перенаправляем на тест интересов после регистрации
+    // Используем window.location для гарантированного редиректа
+    if (typeof window !== "undefined") {
+      window.location.href = "/interest-test";
+    }
   };
 
   return (
@@ -101,34 +97,6 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Роль</label>
-                <div className="space-y-2">
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="role"
-                      value="STUDENT"
-                      checked={role === "STUDENT"}
-                      onChange={(e) => setRole(e.target.value as "STUDENT" | "TEACHER")}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-sm text-gray-700">Ученик</span>
-                  </label>
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="role"
-                      value="TEACHER"
-                      checked={role === "TEACHER"}
-                      onChange={(e) => setRole(e.target.value as "STUDENT" | "TEACHER")}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-sm text-gray-700">Учитель</span>
-                  </label>
-                </div>
-              </div>
-
               <button
                 type="submit"
                 disabled={isLoading}
@@ -139,11 +107,11 @@ export default function RegisterPage() {
 
             <p className="text-sm text-gray-600 mt-4 text-center">
               Уже есть аккаунт?{" "}
-              <a
+              <Link
                 href="/login"
                 className="text-blue-600 hover:text-blue-700 font-medium">
                 Войти
-              </a>
+              </Link>
             </p>
           </div>
         </div>

@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
     try {
-      const { name, email, password, role } = req.body;
+      const { name, email, password } = req.body;
 
       if (!name || !email || !password) {
         return res.status(400).json({ error: "Имя, email и пароль обязательны" });
@@ -15,9 +15,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: "Пароль должен содержать минимум 6 символов" });
       }
 
-      // Проверяем роль - при регистрации можно выбрать только STUDENT или TEACHER
-      const allowedRoles = ["STUDENT", "TEACHER"];
-      const userRole = role && allowedRoles.includes(role) ? role : "STUDENT";
+      // При регистрации все пользователи получают роль STUDENT
+      const userRole = "STUDENT";
 
       // Проверяем, существует ли пользователь
       const existingUser = await prisma.user.findUnique({
@@ -44,7 +43,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Возвращаем пользователя без пароля
       const { password: _, ...userWithoutPassword } = user;
 
-      res.status(201).json(userWithoutPassword);
+      res.status(201).json({
+        ...userWithoutPassword,
+        interests: user.interests || [],
+        hasCompletedTest: user.hasCompletedTest || false,
+      });
     } catch (error) {
       console.error("Ошибка регистрации:", error);
       res.status(500).json({ error: "Ошибка регистрации" });

@@ -8,6 +8,8 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  interests?: string[];
+  hasCompletedTest?: boolean;
 }
 
 export interface Course {
