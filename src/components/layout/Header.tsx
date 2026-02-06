@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import Link from "next/link";
-import { BookOpen, User, Menu, X, Heart, Bell, LogOut, LogIn, Shield } from "lucide-react";
+import { BookOpen, User, Menu, X, Heart, Bell, LogOut, LogIn, Shield, FileSpreadsheet } from "lucide-react";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { favoriteCourses, favoriteWebinars } = useFavorites();
-  const { user, isAuthenticated, logout, isAdmin } = useAuth();
+  const { user, isAuthenticated, logout, isAdmin, isTeacher } = useAuth();
   const favoritesCount = favoriteCourses.length + favoriteWebinars.length;
 
   return (
@@ -54,6 +54,14 @@ const Header: React.FC = () => {
               <Bell className="w-5 h-5" />
               <span>Уведомления</span>
             </Link>
+            {(isAdmin || isTeacher) && (
+              <Link
+                href="/admin/students-results"
+                className="flex items-center space-x-1 text-gray-700 hover:text-green-600 transition">
+                <FileSpreadsheet className="w-5 h-5" />
+                <span>Результаты</span>
+              </Link>
+            )}
             {isAdmin && (
               <Link
                 href="/admin/users"
@@ -139,6 +147,14 @@ const Header: React.FC = () => {
                 <Bell className="w-5 h-5" />
                 <span>Уведомления</span>
               </Link>
+              {(isAdmin || isTeacher) && (
+                <Link
+                  href="/admin/students-results"
+                  className="flex items-center space-x-1 text-gray-700 hover:text-green-600 transition">
+                  <FileSpreadsheet className="w-5 h-5" />
+                  <span>Результаты</span>
+                </Link>
+              )}
               {isAdmin && (
                 <Link
                   href="/admin/users"
