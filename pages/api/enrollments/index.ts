@@ -33,30 +33,81 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
-      const formattedEnrollments = enrollments.map((enrollment) => ({
-        id: enrollment.id,
-        userId: enrollment.userId,
-        courseId: enrollment.courseId,
-        progress: enrollment.progress,
-        createdAt: enrollment.createdAt,
-        updatedAt: enrollment.updatedAt,
-        course: {
-          id: enrollment.course.id,
-          title: enrollment.course.title,
-          description: enrollment.course.description,
-          instructor: enrollment.course.instructor,
-          duration: enrollment.course.duration,
-          category: enrollment.course.category,
-          rating: enrollment.course.rating,
-          students: enrollment.course.students,
-          lessons: enrollment.course.lessons.map((lesson) => ({
-            id: lesson.id,
-            title: lesson.title,
-            duration: lesson.duration,
-            order: lesson.order,
-          })),
-          totalLessons: enrollment.course._count.lessons,
-        },
+      const formattedEnrollments = await Promise.all(enrollments.map(async (enrollment) => {
+        if (!enrollment.course) {
+          // Handle orphaned enrollments by providing placeholder course data
+          return {
+            id: enrollment.id,
+            userId: enrollment.userId,
+            courseId: enrollment.courseId,
+            progress: enrollment.progress,
+            createdAt: enrollment.createdAt,
+            updatedAt: enrollment.updatedAt,
+            course: {
+              id: enrollment.courseId,
+              title: 'Курс удален',
+              description: 'Этот курс был удален',
+              instructor: 'Неизвестно',
+              duration: 'Неизвестно',
+              category: 'Неизвестно',
+              rating: 0,
+              students: 0,
+              lessons: [],
+              totalLessons: 0,
+            },
+          };
+        }
+
+        let progress = enrollment.progress;
+
+        try {
+          // Recalculate progress based on completed lessons
+          const completedLessonsCount = await prisma.lessonCompletion.count({
+            where: { enrollmentId: enrollment.id },
+          });
+          const totalLessons = enrollment.course._count.lessons;
+          const calculatedProgress = totalLessons > 0 ? (completedLessonsCount / totalLessons) * 100 : 0;
+
+          // Update progress in database if it differs
+          if (Math.abs(enrollment.progress - calculatedProgress) > 0.01) {
+            await prisma.enrollment.update({
+              where: { id: enrollment.id },
+              data: { progress: calculatedProgress, updatedAt: new Date() },
+            });
+          }
+
+          progress = calculatedProgress;
+        } catch (progressError) {
+          console.error('Failed to calculate/update progress for enrollment:', enrollment.id, progressError);
+          // Use stored progress if calculation fails
+          progress = enrollment.progress;
+        }
+
+        return {
+          id: enrollment.id,
+          userId: enrollment.userId,
+          courseId: enrollment.courseId,
+          progress: progress,
+          createdAt: enrollment.createdAt,
+          updatedAt: enrollment.updatedAt,
+          course: {
+            id: enrollment.course.id,
+            title: enrollment.course.title,
+            description: enrollment.course.description,
+            instructor: enrollment.course.instructor,
+            duration: enrollment.course.duration,
+            category: enrollment.course.category,
+            rating: enrollment.course.rating,
+            students: enrollment.course.students,
+            lessons: enrollment.course.lessons.map((lesson) => ({
+              id: lesson.id,
+              title: lesson.title,
+              duration: lesson.duration,
+              order: lesson.order,
+            })),
+            totalLessons: enrollment.course._count.lessons,
+          },
+        };
       }));
 
       res.status(200).json(formattedEnrollments);

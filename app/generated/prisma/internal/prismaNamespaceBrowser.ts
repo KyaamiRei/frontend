@@ -58,7 +58,8 @@ export const ModelName = {
   Webinar: 'Webinar',
   FavoriteCourse: 'FavoriteCourse',
   FavoriteWebinar: 'FavoriteWebinar',
-  Enrollment: 'Enrollment'
+  Enrollment: 'Enrollment',
+  LessonCompletion: 'LessonCompletion'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -188,6 +189,16 @@ export const EnrollmentScalarFieldEnum = {
 } as const
 
 export type EnrollmentScalarFieldEnum = (typeof EnrollmentScalarFieldEnum)[keyof typeof EnrollmentScalarFieldEnum]
+
+
+export const LessonCompletionScalarFieldEnum = {
+  id: 'id',
+  enrollmentId: 'enrollmentId',
+  lessonId: 'lessonId',
+  completedAt: 'completedAt'
+} as const
+
+export type LessonCompletionScalarFieldEnum = (typeof LessonCompletionScalarFieldEnum)[keyof typeof LessonCompletionScalarFieldEnum]
 
 
 export const SortOrder = {

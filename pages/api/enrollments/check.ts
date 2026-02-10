@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
-      if (!enrollment) {
+      if (!enrollment || !enrollment.course) {
         return res.status(200).json({ enrolled: false });
       }
 

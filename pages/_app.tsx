@@ -4,6 +4,7 @@ import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CoursesProvider } from "@/contexts/CoursesContext";
 import { WebinarsProvider } from "@/contexts/WebinarsContext";
+import { EnrollmentsProvider } from "@/contexts/EnrollmentsContext";
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
@@ -11,7 +12,9 @@ export default function App({ Component, pageProps }: AppProps) {
       <CoursesProvider>
         <WebinarsProvider>
           <FavoritesProvider>
-            <Component {...pageProps} />
+            <EnrollmentsProvider>
+              <Component {...pageProps} />
+            </EnrollmentsProvider>
           </FavoritesProvider>
         </WebinarsProvider>
       </CoursesProvider>

@@ -57,3 +57,8 @@ export type FavoriteWebinar = Prisma.FavoriteWebinarModel
  * 
  */
 export type Enrollment = Prisma.EnrollmentModel
+/**
+ * Model LessonCompletion
+ * 
+ */
+export type LessonCompletion = Prisma.LessonCompletionModel

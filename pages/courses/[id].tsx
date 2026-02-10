@@ -4,28 +4,20 @@ import { useRouter } from "next/router";
 import { Layout } from "@/components";
 import { useCourses } from "@/contexts/CoursesContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEnrollments } from "@/contexts/EnrollmentsContext";
 import { Clock, Users, Star, Play, CheckCircle, BookOpen, Plus, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
-
-interface Enrollment {
-  enrolled: boolean;
-  progress?: number;
-  course?: {
-    totalLessons?: number;
-  };
-}
 
 export default function CourseDetail() {
   const router = useRouter();
   const { id } = router.query;
   const { getCourseById, addReview } = useCourses();
   const { user, isAuthenticated } = useAuth();
+  const { getEnrollmentByCourseId, fetchEnrollments, loading: enrollmentsLoading, unenroll } = useEnrollments();
   const [activeTab, setActiveTab] = useState<"overview" | "lessons" | "reviews">("overview");
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-  const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
-  const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(true);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [courseStudents, setCourseStudents] = useState<number | null>(null);
   const [showAddLessonForm, setShowAddLessonForm] = useState(false);
@@ -37,41 +29,14 @@ export default function CourseDetail() {
   const [isDeletingLesson, setIsDeletingLesson] = useState<string | null>(null);
 
   const course = id ? getCourseById(id as string) : undefined;
+  const enrollment = getEnrollmentByCourseId(id as string);
 
-  // Проверяем запись на курс при загрузке
+  // Устанавливаем количество студентов
   useEffect(() => {
-    const checkEnrollment = async () => {
-      if (!id || !user?.id) {
-        setIsCheckingEnrollment(false);
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/enrollments/check?userId=${user.id}&courseId=${id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setEnrollment(data);
-          if (data.enrolled && course) {
-            setCourseStudents(course.students);
-          }
-        }
-      } catch (error) {
-        console.error("Ошибка проверки записи на курс:", error);
-      } finally {
-        setIsCheckingEnrollment(false);
-      }
-    };
-
-    if (course && user?.id) {
+    if (course) {
       setCourseStudents(course.students);
-      checkEnrollment();
-    } else {
-      setIsCheckingEnrollment(false);
-      if (course) {
-        setCourseStudents(course.students);
-      }
     }
-  }, [id, user?.id, course]);
+  }, [course]);
 
   const handleEnroll = async () => {
     if (!user) {
@@ -96,7 +61,7 @@ export default function CourseDetail() {
 
       if (response.ok) {
         const data = await response.json();
-        setEnrollment({ enrolled: true, progress: 0, course: data.course });
+        await fetchEnrollments();
         const newStudentsCount = (courseStudents !== null ? courseStudents : course?.students || 0) + 1;
         setCourseStudents(newStudentsCount);
         // Обновляем курс в контексте
@@ -315,38 +280,55 @@ export default function CourseDetail() {
                 </div>
               </div>
 
-              {isCheckingEnrollment ? (
+              {enrollmentsLoading ? (
                 <button
                   disabled
                   className="bg-gray-400 text-white px-8 py-3 rounded-lg font-semibold cursor-not-allowed">
                   Загрузка...
                 </button>
-              ) : enrollment?.enrolled ? (
+              ) : enrollment ? (
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2 text-green-600 font-semibold">
                     <CheckCircle className="w-5 h-5" />
                     <span>Вы записаны на этот курс</span>
                   </div>
-                  {enrollment.progress !== undefined && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm text-gray-600">
-                        <span>Прогресс прохождения</span>
-                        <span className="font-semibold">{Math.round(enrollment.progress)}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div
-                          className={`h-3 rounded-full transition-all ${
-                            enrollment.progress >= 100 ? "bg-green-600" : "bg-blue-600"
-                          }`}
-                          style={{ width: `${enrollment.progress}%` }}></div>
-                      </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <span>Прогресс прохождения</span>
+                      <span className="font-semibold">
+                        {Math.round((enrollment.progress / 100) * enrollment.course.totalLessons)}/{enrollment.course.totalLessons} уроков завершено
+                      </span>
                     </div>
-                  )}
-                  <Link
-                    href="/profile"
-                    className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
-                    Перейти к моим курсам
-                  </Link>
+                    <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                      <div
+                        className={`h-4 rounded-full transition-all duration-500 ${
+                          enrollment.progress >= 100
+                            ? "bg-gradient-to-r from-green-400 to-green-600"
+                            : "bg-gradient-to-r from-blue-400 to-blue-600"
+                        }`}
+                        style={{ width: `${enrollment.progress}%` }}></div>
+                    </div>
+                  </div>
+                  <div className="flex space-x-3">
+                    <Link
+                      href="/profile"
+                      className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                      Перейти к моим курсам
+                    </Link>
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Вы уверены, что хотите отписаться от этого курса? Все прогресс будет потерян.")) return;
+                        try {
+                          await unenroll(enrollment.id);
+                          alert("Вы успешно отписались от курса");
+                        } catch (error) {
+                          alert("Ошибка при отписке от курса");
+                        }
+                      }}
+                      className="inline-block bg-red-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700 transition">
+                      Отписаться
+                    </button>
+                  </div>
                 </div>
               ) : !isAuthenticated ? (
                 <div className="space-y-3">
@@ -505,9 +487,9 @@ export default function CourseDetail() {
                         <div
                           key={lesson.id}
                           className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
-                          <div className="flex items-center space-x-4 flex-1">
+                  <div className="flex items-center space-x-4 flex-1">
                             <div className="flex-shrink-0">
-                              {lesson.completed ? (
+                              {enrollment && enrollment.course.lessons.some((l: any) => l.id === lesson.id) ? (
                                 <CheckCircle className="w-6 h-6 text-green-500" />
                               ) : (
                                 <div className="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">

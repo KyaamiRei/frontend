@@ -5,6 +5,7 @@ import { Layout } from "@/components";
 import { User, BookOpen, Video, Award, Settings, Trophy, Target, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEnrollments } from "@/contexts/EnrollmentsContext";
 
 interface Enrollment {
   id: string;
@@ -35,39 +36,13 @@ interface Enrollment {
 export default function Profile() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [enrollmentsLoading, setEnrollmentsLoading] = useState(true);
+  const { enrollments, loading: enrollmentsLoading } = useEnrollments();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.replace("/login");
     }
   }, [isLoading, isAuthenticated, router]);
-
-  useEffect(() => {
-    const fetchEnrollments = async () => {
-      if (!user?.id) {
-        setEnrollmentsLoading(false);
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/enrollments?userId=${user.id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setEnrollments(data);
-        }
-      } catch (error) {
-        console.error("Ошибка загрузки результатов прохождения курсов:", error);
-      } finally {
-        setEnrollmentsLoading(false);
-      }
-    };
-
-    if (user?.id) {
-      fetchEnrollments();
-    }
-  }, [user?.id]);
 
   const activeCourses = enrollments.filter((e) => e.progress < 100);
   const completedCourses = enrollments.filter((e) => e.progress >= 100);
@@ -151,6 +126,8 @@ export default function Profile() {
               </div>
             </div>
 
+           
+
             {/* My Courses */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
@@ -177,7 +154,8 @@ export default function Profile() {
               ) : (
                 <div className="space-y-4">
                   {enrollments.map((enrollment) => {
-                    const progressPercent = Math.round(enrollment.progress);
+                    const progressPercent = enrollment.progress;
+                    const displayProgress = Math.round(enrollment.progress);
                     const completedLessons = Math.round(
                       (enrollment.progress / 100) * enrollment.course.totalLessons,
                     );
@@ -193,7 +171,7 @@ export default function Profile() {
                               {enrollment.course.title}
                             </h3>
                             <div className="flex items-center space-x-2 text-sm text-gray-500">
-                              <span>Прогресс: {progressPercent}%</span>
+                              <span>Прогресс: {displayProgress}%</span>
                               <span>•</span>
                               <span>
                                 {completedLessons} из {enrollment.course.totalLessons} уроков
@@ -230,54 +208,6 @@ export default function Profile() {
               )}
             </div>
 
-            {/* Achievements */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Trophy className="w-6 h-6 text-yellow-500" />
-                <h2 className="text-2xl font-bold text-gray-800">Достижения</h2>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-yellow-50 rounded-lg border-2 border-yellow-300">
-                  <Trophy className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-800">Первые шаги</p>
-                  <p className="text-xs text-gray-500 mt-1">Завершите первый урок</p>
-                </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg border-2 border-green-300">
-                  <Target className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-800">Стрелок</p>
-                  <p className="text-xs text-gray-500 mt-1">Завершите 5 курсов</p>
-                </div>
-                <div className="text-center p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
-                  <TrendingUp className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-800">Ученик</p>
-                  <p className="text-xs text-gray-500 mt-1">Изучите 10 уроков</p>
-                </div>
-                <div className="text-center p-4 bg-gray-100 rounded-lg border-2 border-gray-300 opacity-50">
-                  <Award className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-600">Мастер</p>
-                  <p className="text-xs text-gray-400 mt-1">Завершите 20 курсов</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Settings */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                <Settings className="w-6 h-6 mr-2" />
-                Настройки
-              </h2>
-              <div className="space-y-4">
-                <button className="w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
-                  Редактировать профиль
-                </button>
-                <button className="w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
-                  Изменить пароль
-                </button>
-                <button className="w-full text-left p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
-                  Уведомления
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </Layout>

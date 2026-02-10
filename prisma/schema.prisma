@@ -53,6 +53,7 @@ model Lesson {
   order     Int
   createdAt DateTime @default(now())
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessonCompletions LessonCompletion[]
 }
 
 model CourseReview {
@@ -118,8 +119,20 @@ model Enrollment {
   updatedAt DateTime @updatedAt
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonCompletions LessonCompletion[]
 
   @@unique([userId, courseId])
+}
+
+model LessonCompletion {
+  id            String     @id @default(uuid())
+  enrollmentId  String
+  lessonId      String
+  completedAt   DateTime   @default(now())
+  enrollment    Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lesson        Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, lessonId])
 }
 
 enum Role {

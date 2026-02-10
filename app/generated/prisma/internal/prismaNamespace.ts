@@ -391,7 +391,8 @@ export const ModelName = {
   Webinar: 'Webinar',
   FavoriteCourse: 'FavoriteCourse',
   FavoriteWebinar: 'FavoriteWebinar',
-  Enrollment: 'Enrollment'
+  Enrollment: 'Enrollment',
+  LessonCompletion: 'LessonCompletion'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -407,7 +408,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "course" | "lesson" | "courseReview" | "webinar" | "favoriteCourse" | "favoriteWebinar" | "enrollment"
+    modelProps: "user" | "course" | "lesson" | "courseReview" | "webinar" | "favoriteCourse" | "favoriteWebinar" | "enrollment" | "lessonCompletion"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1003,6 +1004,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    LessonCompletion: {
+      payload: Prisma.$LessonCompletionPayload<ExtArgs>
+      fields: Prisma.LessonCompletionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.LessonCompletionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LessonCompletionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.LessonCompletionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LessonCompletionPayload>
+        }
+        findFirst: {
+          args: Prisma.LessonCompletionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LessonCompletionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.LessonCompletionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LessonCompletionPayload>
+        }
+        findMany: {
+          args: Prisma.LessonCompletionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LessonCompletionPayload>[]
+        }
+        create: {
+          args: Prisma.LessonCompletionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LessonCompletionPayload>
+        }
+        createMany: {
+          args: Prisma.LessonCompletionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.LessonCompletionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LessonCompletionPayload>[]
+        }
+        delete: {
+          args: Prisma.LessonCompletionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LessonCompletionPayload>
+        }
+        update: {
+          args: Prisma.LessonCompletionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LessonCompletionPayload>
+        }
+        deleteMany: {
+          args: Prisma.LessonCompletionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.LessonCompletionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.LessonCompletionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LessonCompletionPayload>[]
+        }
+        upsert: {
+          args: Prisma.LessonCompletionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LessonCompletionPayload>
+        }
+        aggregate: {
+          args: Prisma.LessonCompletionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateLessonCompletion>
+        }
+        groupBy: {
+          args: Prisma.LessonCompletionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LessonCompletionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.LessonCompletionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LessonCompletionCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1153,6 +1228,16 @@ export const EnrollmentScalarFieldEnum = {
 } as const
 
 export type EnrollmentScalarFieldEnum = (typeof EnrollmentScalarFieldEnum)[keyof typeof EnrollmentScalarFieldEnum]
+
+
+export const LessonCompletionScalarFieldEnum = {
+  id: 'id',
+  enrollmentId: 'enrollmentId',
+  lessonId: 'lessonId',
+  completedAt: 'completedAt'
+} as const
+
+export type LessonCompletionScalarFieldEnum = (typeof LessonCompletionScalarFieldEnum)[keyof typeof LessonCompletionScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1364,6 +1449,7 @@ export type GlobalOmitConfig = {
   favoriteCourse?: Prisma.FavoriteCourseOmit
   favoriteWebinar?: Prisma.FavoriteWebinarOmit
   enrollment?: Prisma.EnrollmentOmit
+  lessonCompletion?: Prisma.LessonCompletionOmit
 }
 
 /* Types for Logging */
