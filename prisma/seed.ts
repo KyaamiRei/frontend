@@ -109,6 +109,7 @@ async function main() {
 // async function main() {
 //   // Создаем тестового пользователя
 //   const hashedPassword = await bcrypt.hash("password123", 10);
+
 //   const user = await prisma.user.upsert({
 //     where: { email: "test@example.com" },
 //     update: {},

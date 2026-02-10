@@ -48,6 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           id: lesson.id,
           title: lesson.title,
           duration: lesson.duration,
+          content: lesson.content,
           completed: false,
         })),
         reviews: course.reviews.map((review) => ({
@@ -64,9 +65,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } else if (req.method === "PUT") {
     try {
-      const { title, description, fullDescription, instructor, duration, category, price, image } =
+      const { title, description, fullDescription, instructor, duration, category, price, image, lessons } =
         req.body;
 
+      // Update course data
       const course = await prisma.course.update({
         where: { id: id as string },
         data: {
@@ -81,7 +83,77 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
-      res.status(200).json(course);
+      // If lessons are provided, add them to the course
+      if (lessons && Array.isArray(lessons)) {
+        // Get the current max order for lessons in this course
+        const maxOrderLesson = await prisma.lesson.findFirst({
+          where: { courseId: id as string },
+          orderBy: { order: 'desc' },
+        });
+        const nextOrder = maxOrderLesson ? maxOrderLesson.order + 1 : 1;
+
+        // Create new lessons
+        await prisma.lesson.createMany({
+          data: lessons.map((lesson: any, index: number) => ({
+            courseId: id as string,
+            title: lesson.title,
+            duration: lesson.duration,
+            content: lesson.content,
+            order: nextOrder + index,
+          })),
+        });
+      }
+
+      // Fetch the updated course with lessons
+      const updatedCourse = await prisma.course.findUnique({
+        where: { id: id as string },
+        include: {
+          lessons: {
+            orderBy: { order: "asc" },
+          },
+          reviews: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  avatar: true,
+                },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+          },
+        },
+      });
+
+      res.status(200).json({
+        id: updatedCourse!.id,
+        title: updatedCourse!.title,
+        description: updatedCourse!.description,
+        fullDescription: updatedCourse!.fullDescription,
+        instructor: updatedCourse!.instructor,
+        duration: updatedCourse!.duration,
+        students: updatedCourse!.students,
+        rating: updatedCourse!.rating,
+        category: updatedCourse!.category,
+        price: updatedCourse!.price,
+        image: updatedCourse!.image,
+        lessons: updatedCourse!.lessons.map((lesson) => ({
+          id: lesson.id,
+          title: lesson.title,
+          duration: lesson.duration,
+          content: lesson.content,
+          completed: false,
+        })),
+        reviews: updatedCourse!.reviews.map((review) => ({
+          id: review.id,
+          author: review.user.name,
+          rating: review.rating,
+          date: review.createdAt,
+          text: review.text,
+        })),
+      });
     } catch (error) {
       console.error("Ошибка обновления курса:", error);
       res.status(500).json({ error: "Ошибка обновления курса" });

@@ -117,6 +117,7 @@ export const LessonScalarFieldEnum = {
   courseId: 'courseId',
   title: 'title',
   duration: 'duration',
+  content: 'content',
   order: 'order',
   createdAt: 'createdAt'
 } as const

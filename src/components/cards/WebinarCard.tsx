@@ -1,9 +1,11 @@
 import React from "react";
 import Link from "next/link";
-import { Calendar, Clock, Users, Heart } from "lucide-react";
+import { Calendar, Clock, Users, Heart, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale/ru";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useWebinars } from "@/contexts/WebinarsContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface WebinarCardProps {
   id: string;
@@ -27,6 +29,8 @@ const WebinarCard: React.FC<WebinarCardProps> = ({
   isLive = false,
 }) => {
   const { isWebinarFavorite, toggleWebinarFavorite } = useFavorites();
+  const { deleteWebinar } = useWebinars();
+  const { user } = useAuth();
   const isFavorite = isWebinarFavorite(id);
   const isUpcoming = date > new Date();
 
@@ -34,6 +38,19 @@ const WebinarCard: React.FC<WebinarCardProps> = ({
     e.preventDefault();
     e.stopPropagation();
     toggleWebinarFavorite(id);
+  };
+
+  const handleDeleteClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (confirm("Вы уверены, что хотите удалить этот вебинар?")) {
+      try {
+        await deleteWebinar(id);
+        alert("Вебинар успешно удален");
+      } catch (error) {
+        alert("Ошибка при удалении вебинара");
+      }
+    }
   };
 
   return (
@@ -78,6 +95,17 @@ const WebinarCard: React.FC<WebinarCardProps> = ({
           {isUpcoming && !isLive && (
             <div className="mt-4 pt-4 border-t">
               <span className="text-sm text-blue-600 font-medium">Регистрация открыта</span>
+            </div>
+          )}
+
+          {user && (user.role === "ADMIN" || user.role === "TEACHER") && (
+            <div className="mt-4 pt-4 border-t">
+              <button
+                onClick={handleDeleteClick}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition">
+                <Trash2 className="w-4 h-4" />
+                <span>Удалить вебинар</span>
+              </button>
             </div>
           )}
         </div>

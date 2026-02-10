@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { Layout } from "@/components";
 import { useCourses } from "@/contexts/CoursesContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Clock, Users, Star, Play, CheckCircle, BookOpen } from "lucide-react";
+import { Clock, Users, Star, Play, CheckCircle, BookOpen, Plus } from "lucide-react";
 import Link from "next/link";
 
 interface Enrollment {
@@ -28,6 +28,11 @@ export default function CourseDetail() {
   const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(true);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [courseStudents, setCourseStudents] = useState<number | null>(null);
+  const [showAddLessonForm, setShowAddLessonForm] = useState(false);
+  const [newLessonTitle, setNewLessonTitle] = useState("");
+  const [newLessonDuration, setNewLessonDuration] = useState("");
+  const [newLessonContent, setNewLessonContent] = useState("");
+  const [isAddingLesson, setIsAddingLesson] = useState(false);
 
   const course = id ? getCourseById(id as string) : undefined;
 
@@ -105,6 +110,52 @@ export default function CourseDetail() {
       alert("Ошибка при записи на курс");
     } finally {
       setIsEnrolling(false);
+    }
+  };
+
+  const handleAddLesson = async () => {
+    if (!user || (user.role !== "TEACHER" && user.role !== "ADMIN")) {
+      alert("У вас нет прав для добавления уроков");
+      return;
+    }
+
+    if (!newLessonTitle.trim() || !newLessonDuration.trim() || !id) return;
+
+    setIsAddingLesson(true);
+    try {
+      const response = await fetch(`/api/courses/${id}/lessons`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          lessons: [{
+            title: newLessonTitle.trim(),
+            duration: newLessonDuration.trim(),
+            content: newLessonContent.trim(),
+          }],
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Обновляем курс в контексте
+        if (course && course.lessons) {
+          course.lessons.push(...data.lessons);
+        }
+        setNewLessonTitle("");
+        setNewLessonDuration("");
+        setShowAddLessonForm(false);
+        alert("Урок добавлен успешно");
+      } else {
+        const error = await response.json();
+        alert(error.error || "Ошибка при добавлении урока");
+      }
+    } catch (error) {
+      console.error("Ошибка добавления урока:", error);
+      alert("Ошибка при добавлении урока");
+    } finally {
+      setIsAddingLesson(false);
     }
   };
 
@@ -269,7 +320,80 @@ export default function CourseDetail() {
 
                 {activeTab === "lessons" && (
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Программа курса</h2>
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-2xl font-bold text-gray-800">Программа курса</h2>
+                      {user && (user.role === "TEACHER" || user.role === "ADMIN") && (
+                        <button
+                          onClick={() => setShowAddLessonForm(!showAddLessonForm)}
+                          className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition">
+                          <Plus className="w-5 h-5" />
+                          <span>Добавить урок</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {showAddLessonForm && (
+                      <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Добавить новый урок</h3>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Название урока
+                            </label>
+                            <input
+                              type="text"
+                              value={newLessonTitle}
+                              onChange={(e) => setNewLessonTitle(e.target.value)}
+                              placeholder="Введите название урока"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Длительность
+                            </label>
+                            <input
+                              type="text"
+                              value={newLessonDuration}
+                              onChange={(e) => setNewLessonDuration(e.target.value)}
+                              placeholder="Например: 30 мин"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Содержание урока
+                            </label>
+                            <textarea
+                              value={newLessonContent}
+                              onChange={(e) => setNewLessonContent(e.target.value)}
+                              placeholder="Введите содержание урока..."
+                              rows={6}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div className="flex space-x-3">
+                            <button
+                              onClick={handleAddLesson}
+                              disabled={isAddingLesson || !newLessonTitle.trim() || !newLessonDuration.trim()}
+                              className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                              {isAddingLesson ? "Добавляем..." : "Добавить урок"}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowAddLessonForm(false);
+                                setNewLessonTitle("");
+                                setNewLessonDuration("");
+                                setNewLessonContent("");
+                              }}
+                              className="bg-gray-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-600 transition">
+                              Отмена
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="space-y-3">
                       {course.lessons?.map((lesson: any, index: number) => (
                         <div
@@ -293,10 +417,12 @@ export default function CourseDetail() {
                               </div>
                             </div>
                           </div>
-                          <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium">
+                          <Link
+                            href={`/courses/${id}/lessons/${lesson.id}`}
+                            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium">
                             <Play className="w-5 h-5" />
                             <span>Смотреть</span>
-                          </button>
+                          </Link>
                         </div>
                       ))}
                     </div>

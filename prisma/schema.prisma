@@ -49,6 +49,7 @@ model Lesson {
   courseId  String
   title     String
   duration  String
+  content   String?
   order     Int
   createdAt DateTime @default(now())
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
