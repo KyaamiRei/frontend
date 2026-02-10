@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { Layout } from "@/components";
 import { useCourses } from "@/contexts/CoursesContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { Clock, Users, Star, Play, CheckCircle, BookOpen, Plus } from "lucide-react";
+import { Clock, Users, Star, Play, CheckCircle, BookOpen, Plus, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 interface Enrollment {
@@ -33,6 +33,8 @@ export default function CourseDetail() {
   const [newLessonDuration, setNewLessonDuration] = useState("");
   const [newLessonContent, setNewLessonContent] = useState("");
   const [isAddingLesson, setIsAddingLesson] = useState(false);
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [isDeletingLesson, setIsDeletingLesson] = useState<string | null>(null);
 
   const course = id ? getCourseById(id as string) : undefined;
 
@@ -141,7 +143,7 @@ export default function CourseDetail() {
         const data = await response.json();
         // Обновляем курс в контексте
         if (course && course.lessons) {
-          course.lessons.push(...data.lessons);
+          course.lessons = [...course.lessons, ...data.lessons];
         }
         setNewLessonTitle("");
         setNewLessonDuration("");
@@ -157,6 +159,115 @@ export default function CourseDetail() {
     } finally {
       setIsAddingLesson(false);
     }
+  };
+
+  const handleEditLesson = async () => {
+    if (!user || (user.role !== "TEACHER" && user.role !== "ADMIN")) {
+      alert("У вас нет прав для редактирования уроков");
+      return;
+    }
+
+    if (!editingLessonId || !newLessonTitle.trim() || !newLessonDuration.trim() || !id) return;
+
+    setIsAddingLesson(true);
+    try {
+      const response = await fetch(`/api/courses/${id}/lessons/${editingLessonId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: newLessonTitle.trim(),
+          duration: newLessonDuration.trim(),
+          content: newLessonContent.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Обновляем урок в контексте
+        if (course && course.lessons) {
+          const lessonIndex = course.lessons.findIndex((l: any) => l.id === editingLessonId);
+          if (lessonIndex !== -1) {
+            course.lessons = [
+              ...course.lessons.slice(0, lessonIndex),
+              data.lesson,
+              ...course.lessons.slice(lessonIndex + 1)
+            ];
+          }
+        }
+        setNewLessonTitle("");
+        setNewLessonDuration("");
+        setNewLessonContent("");
+        setShowAddLessonForm(false);
+        setEditingLessonId(null);
+        alert("Урок обновлен успешно");
+      } else {
+        const error = await response.json();
+        alert(error.error || "Ошибка при обновлении урока");
+      }
+    } catch (error) {
+      console.error("Ошибка обновления урока:", error);
+      alert("Ошибка при обновлении урока");
+    } finally {
+      setIsAddingLesson(false);
+    }
+  };
+
+  const handleDeleteLesson = async (lessonId: string) => {
+    if (!user || (user.role !== "TEACHER" && user.role !== "ADMIN")) {
+      alert("У вас нет прав для удаления уроков");
+      return;
+    }
+
+    if (!confirm("Вы уверены, что хотите удалить этот урок?")) return;
+
+    setIsDeletingLesson(lessonId);
+    try {
+      const response = await fetch(`/api/courses/${id}/lessons/${lessonId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        // Удаляем урок из контекста
+        if (course && course.lessons) {
+          course.lessons = course.lessons.filter((l: any) => l.id !== lessonId);
+        }
+        alert("Урок удален успешно");
+      } else {
+        const error = await response.json();
+        alert(error.error || "Ошибка при удалении урока");
+      }
+    } catch (error) {
+      console.error("Ошибка удаления урока:", error);
+      alert("Ошибка при удалении урока");
+    } finally {
+      setIsDeletingLesson(null);
+    }
+  };
+
+  const startEditingLesson = (lesson: any) => {
+    setEditingLessonId(lesson.id);
+    setNewLessonTitle(lesson.title);
+    setNewLessonDuration(lesson.duration);
+    setNewLessonContent(lesson.content || "");
+    setShowAddLessonForm(true);
+  };
+
+  const startAddingLesson = () => {
+    setEditingLessonId(null);
+    setNewLessonTitle("");
+    setNewLessonDuration("");
+    setNewLessonContent("");
+    setShowAddLessonForm(true);
+  };
+
+  const cancelEditing = () => {
+    setEditingLessonId(null);
+    setNewLessonTitle("");
+    setNewLessonDuration("");
+    setNewLessonContent("");
+    setShowAddLessonForm(false);
   };
 
   if (!course) {
@@ -322,9 +433,9 @@ export default function CourseDetail() {
                   <div>
                     <div className="flex items-center justify-between mb-6">
                       <h2 className="text-2xl font-bold text-gray-800">Программа курса</h2>
-                      {user && (user.role === "TEACHER" || user.role === "ADMIN") && (
+                      {!showAddLessonForm && user && (user.role === "TEACHER" || user.role === "ADMIN") && (
                         <button
-                          onClick={() => setShowAddLessonForm(!showAddLessonForm)}
+                          onClick={() => setShowAddLessonForm(true)}
                           className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition">
                           <Plus className="w-5 h-5" />
                           <span>Добавить урок</span>
@@ -334,7 +445,7 @@ export default function CourseDetail() {
 
                     {showAddLessonForm && (
                       <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Добавить новый урок</h3>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">{editingLessonId ? "Редактировать урок" : "Добавить новый урок"}</h3>
                         <div className="space-y-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -374,18 +485,13 @@ export default function CourseDetail() {
                           </div>
                           <div className="flex space-x-3">
                             <button
-                              onClick={handleAddLesson}
+                              onClick={editingLessonId ? handleEditLesson : handleAddLesson}
                               disabled={isAddingLesson || !newLessonTitle.trim() || !newLessonDuration.trim()}
                               className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                              {isAddingLesson ? "Добавляем..." : "Добавить урок"}
+                              {isAddingLesson ? (editingLessonId ? "Обновляем..." : "Добавляем...") : (editingLessonId ? "Обновить урок" : "Добавить урок")}
                             </button>
                             <button
-                              onClick={() => {
-                                setShowAddLessonForm(false);
-                                setNewLessonTitle("");
-                                setNewLessonDuration("");
-                                setNewLessonContent("");
-                              }}
+                              onClick={cancelEditing}
                               className="bg-gray-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-600 transition">
                               Отмена
                             </button>
@@ -417,12 +523,31 @@ export default function CourseDetail() {
                               </div>
                             </div>
                           </div>
-                          <Link
-                            href={`/courses/${id}/lessons/${lesson.id}`}
-                            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium">
-                            <Play className="w-5 h-5" />
-                            <span>Смотреть</span>
-                          </Link>
+                          <div className="flex items-center space-x-2">
+                            {user && (user.role === "TEACHER" || user.role === "ADMIN") && (
+                              <>
+                                <button
+                                  onClick={() => startEditingLesson(lesson)}
+                                  className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 font-medium">
+                                  <Edit className="w-4 h-4" />
+                                  <span>Редактировать</span>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteLesson(lesson.id)}
+                                  disabled={isDeletingLesson === lesson.id}
+                                  className="flex items-center space-x-1 text-red-600 hover:text-red-700 font-medium disabled:opacity-50">
+                                  <Trash2 className="w-4 h-4" />
+                                  <span>{isDeletingLesson === lesson.id ? "Удаляем..." : "Удалить"}</span>
+                                </button>
+                              </>
+                            )}
+                            <Link
+                              href={`/courses/${id}/lessons/${lesson.id}`}
+                              className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium">
+                              <Play className="w-5 h-5" />
+                              <span>Смотреть</span>
+                            </Link>
+                          </div>
                         </div>
                       ))}
                     </div>
