@@ -8,6 +8,11 @@ interface Enrollment {
   progress: number;
   createdAt: string;
   updatedAt: string;
+  certificate?: {
+    id: string;
+    certificateNumber: string;
+    issuedAt: string;
+  } | null;
   course: {
     id: string;
     title: string;
@@ -27,13 +32,25 @@ interface Enrollment {
   };
 }
 
+interface Certificate {
+  id: string;
+  certificateNumber: string;
+  issuedAt: string;
+}
+
+interface CompleteLessonResult {
+  progress: number;
+  certificate: Certificate | null;
+  message: string;
+}
+
 interface EnrollmentsContextType {
   enrollments: Enrollment[];
   loading: boolean;
   error: string | null;
   fetchEnrollments: () => Promise<void>;
   getEnrollmentByCourseId: (courseId: string) => Enrollment | undefined;
-  completeLesson: (enrollmentId: string, lessonId: string) => Promise<void>;
+  completeLesson: (enrollmentId: string, lessonId: string) => Promise<CompleteLessonResult>;
   checkLessonCompletion: (enrollmentId: string, lessonId: string) => Promise<boolean>;
   unenroll: (enrollmentId: string) => Promise<void>;
 }
@@ -82,7 +99,7 @@ export const EnrollmentsProvider: React.FC<EnrollmentsProviderProps> = ({ childr
     return enrollments.find((enrollment) => enrollment.courseId === courseId);
   };
 
-  const completeLesson = async (enrollmentId: string, lessonId: string) => {
+  const completeLesson = async (enrollmentId: string, lessonId: string): Promise<CompleteLessonResult> => {
     try {
       const response = await fetch(`/api/enrollments/${enrollmentId}/lessons/${lessonId}/complete`, {
         method: "POST",
@@ -96,10 +113,23 @@ export const EnrollmentsProvider: React.FC<EnrollmentsProviderProps> = ({ childr
         throw new Error("Failed to complete lesson");
       }
 
+      const result = await response.json();
+
       // Refresh enrollments after completion
       await fetchEnrollments();
+
+      return {
+        progress: result.progress,
+        certificate: result.certificate,
+        message: result.message,
+      };
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
+      return {
+        progress: 0,
+        certificate: null,
+        message: err instanceof Error ? err.message : "An error occurred",
+      };
     }
   };
 

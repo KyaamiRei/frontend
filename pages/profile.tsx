@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { Layout } from "@/components";
-import { User, BookOpen, Video, Award, Settings, Trophy, Target, TrendingUp } from "lucide-react";
+import { User, BookOpen, Video, Award, FileText } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEnrollments } from "@/contexts/EnrollmentsContext";
@@ -14,6 +14,11 @@ interface Enrollment {
   progress: number;
   createdAt: string;
   updatedAt: string;
+  certificate?: {
+    id: string;
+    certificateNumber: string;
+    issuedAt: string;
+  } | null;
   course: {
     id: string;
     title: string;
@@ -187,6 +192,20 @@ export default function Profile() {
                               Категория: {enrollment.course.category} • Преподаватель:{" "}
                               {enrollment.course.instructor}
                             </div>
+                            {isCompleted && enrollment.certificate && (
+                              <div className="mt-2 flex items-center space-x-2">
+                                <Award className="w-4 h-4 text-yellow-600" />
+                                <span className="text-xs text-yellow-600 font-medium">
+                                  Сертификат получен
+                                </span>
+                                <Link
+                                  href={`/certificates/${enrollment.certificate.id}`}
+                                  className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1">
+                                  <FileText className="w-3 h-3" />
+                                  <span>Просмотреть</span>
+                                </Link>
+                              </div>
+                            )}
                           </div>
                           <Link
                             href={`/courses/${enrollment.courseId}`}

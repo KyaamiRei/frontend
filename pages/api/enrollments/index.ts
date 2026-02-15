@@ -27,6 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               },
             },
           },
+          certificate: true,
         },
         orderBy: {
           updatedAt: "desc",
@@ -83,6 +84,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           progress = enrollment.progress;
         }
 
+        // Format certificate data if exists
+        const certificate = enrollment.certificate ? {
+          id: enrollment.certificate.id,
+          certificateNumber: enrollment.certificate.certificateNumber,
+          issuedAt: enrollment.certificate.issuedAt,
+        } : null;
+
         return {
           id: enrollment.id,
           userId: enrollment.userId,
@@ -90,6 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           progress: progress,
           createdAt: enrollment.createdAt,
           updatedAt: enrollment.updatedAt,
+          certificate,
           course: {
             id: enrollment.course.id,
             title: enrollment.course.title,
@@ -166,6 +175,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               },
             },
           },
+          certificate: true,
         },
       });
 
@@ -179,6 +189,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
+      // Format certificate data if exists
+      const certificate = enrollment.certificate ? {
+        id: enrollment.certificate.id,
+        certificateNumber: enrollment.certificate.certificateNumber,
+        issuedAt: enrollment.certificate.issuedAt,
+      } : null;
+
       const formattedEnrollment = {
         id: enrollment.id,
         userId: enrollment.userId,
@@ -186,6 +203,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         progress: enrollment.progress,
         createdAt: enrollment.createdAt,
         updatedAt: enrollment.updatedAt,
+        certificate,
         course: {
           id: enrollment.course.id,
           title: enrollment.course.title,
@@ -208,7 +226,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(201).json(formattedEnrollment);
     } catch (error) {
       console.error("Ошибка записи на курс:", error);
-      res.status(500).json({ error: "Ошибка записи на курс" });
+      const errorMessage = error instanceof Error ? error.message : "Ошибка записи на курс";
+      res.status(500).json({ error: errorMessage });
     }
   } else {
     res.setHeader("Allow", ["GET", "POST"]);

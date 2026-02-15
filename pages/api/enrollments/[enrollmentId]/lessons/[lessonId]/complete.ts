@@ -78,9 +78,47 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       });
 
+      // Check if progress reached 100% and generate certificate if not exists
+      let certificate = null;
+      if (newProgress >= 100) {
+        // Check if certificate already exists
+        const existingCertificate = await prisma.certificate.findUnique({
+          where: { enrollmentId: enrollmentId as string },
+        });
+
+        if (!existingCertificate) {
+          // Generate unique certificate number
+          const certificateNumber = `CERT-${enrollment.course.title.substring(0, 3).toUpperCase()}-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+          
+          // Create certificate
+          const newCertificate = await prisma.certificate.create({
+            data: {
+              enrollmentId: enrollmentId as string,
+              userId: enrollment.userId,
+              courseId: enrollment.courseId,
+              certificateNumber,
+            },
+          });
+
+          certificate = {
+            id: newCertificate.id,
+            certificateNumber: newCertificate.certificateNumber,
+            issuedAt: newCertificate.issuedAt,
+          };
+        } else {
+          // Return existing certificate
+          certificate = {
+            id: existingCertificate.id,
+            certificateNumber: existingCertificate.certificateNumber,
+            issuedAt: existingCertificate.issuedAt,
+          };
+        }
+      }
+
       res.status(200).json({
-        message: "Урок завершен",
+        message: newProgress >= 100 ? "Курс завершен! Сертификат получен." : "Урок завершен",
         progress: newProgress,
+        certificate,
       });
     } catch (error) {
       console.error("Ошибка завершения урока:", error);

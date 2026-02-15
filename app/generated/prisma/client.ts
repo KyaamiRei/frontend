@@ -84,3 +84,8 @@ export type Enrollment = Prisma.EnrollmentModel
  * 
  */
 export type LessonCompletion = Prisma.LessonCompletionModel
+/**
+ * Model Certificate
+ * 
+ */
+export type Certificate = Prisma.CertificateModel

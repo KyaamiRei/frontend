@@ -120,6 +120,7 @@ model Enrollment {
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   lessonCompletions LessonCompletion[]
+  certificate Certificate?
 
   @@unique([userId, courseId])
 }
@@ -133,6 +134,19 @@ model LessonCompletion {
   lesson        Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@unique([enrollmentId, lessonId])
+}
+
+model Certificate {
+  id                String     @id @default(uuid())
+  enrollmentId      String     @unique
+  userId            String
+  courseId          String
+  certificateNumber String     @unique
+  issuedAt          DateTime   @default(now())
+  enrollment        Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([courseId])
 }
 
 enum Role {

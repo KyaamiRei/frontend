@@ -5,13 +5,13 @@ import { Layout } from "@/components";
 import { useCourses } from "@/contexts/CoursesContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEnrollments } from "@/contexts/EnrollmentsContext";
-import { Clock, Users, Star, Play, CheckCircle, BookOpen, Plus, Edit, Trash2 } from "lucide-react";
+import { Clock, Users, Star, Play, CheckCircle, Plus, Edit, Trash2, Award } from "lucide-react";
 import Link from "next/link";
 
 export default function CourseDetail() {
   const router = useRouter();
   const { id } = router.query;
-  const { getCourseById, addReview } = useCourses();
+  const { getCourseById, addReview, refreshCourses } = useCourses();
   const { user, isAuthenticated } = useAuth();
   const { getEnrollmentByCourseId, fetchEnrollments, loading: enrollmentsLoading, unenroll } = useEnrollments();
   const [activeTab, setActiveTab] = useState<"overview" | "lessons" | "reviews">("overview");
@@ -29,7 +29,7 @@ export default function CourseDetail() {
   const [isDeletingLesson, setIsDeletingLesson] = useState<string | null>(null);
 
   const course = id ? getCourseById(id as string) : undefined;
-  const enrollment = getEnrollmentByCourseId(id as string);
+  const enrollment = id ? getEnrollmentByCourseId(id as string) : undefined;
 
   // Устанавливаем количество студентов
   useEffect(() => {
@@ -61,20 +61,27 @@ export default function CourseDetail() {
 
       if (response.ok) {
         const data = await response.json();
+        // Обновляем список записей
         await fetchEnrollments();
+        // Небольшая задержка для гарантии обновления состояния
+        await new Promise(resolve => setTimeout(resolve, 100));
+        // Обновляем курс в контексте курсов
+        await refreshCourses();
+        // Обновляем количество студентов
         const newStudentsCount = (courseStudents !== null ? courseStudents : course?.students || 0) + 1;
         setCourseStudents(newStudentsCount);
-        // Обновляем курс в контексте
-        if (course) {
-          course.students = newStudentsCount;
-        }
+        // Показываем успешное сообщение
+        alert("Вы успешно записались на курс!");
       } else {
-        const error = await response.json();
-        alert(error.error || "Ошибка при записи на курс");
+        const errorData = await response.json();
+        const errorMessage = errorData.error || "Ошибка при записи на курс";
+        console.error("Ошибка записи на курс:", errorMessage);
+        alert(errorMessage);
       }
     } catch (error) {
       console.error("Ошибка записи на курс:", error);
-      alert("Ошибка при записи на курс");
+      const errorMessage = error instanceof Error ? error.message : "Ошибка при записи на курс";
+      alert(errorMessage);
     } finally {
       setIsEnrolling(false);
     }
@@ -280,7 +287,7 @@ export default function CourseDetail() {
                 </div>
               </div>
 
-              {enrollmentsLoading ? (
+              {enrollmentsLoading && !enrollment ? (
                 <button
                   disabled
                   className="bg-gray-400 text-white px-8 py-3 rounded-lg font-semibold cursor-not-allowed">
@@ -309,6 +316,27 @@ export default function CourseDetail() {
                         style={{ width: `${enrollment.progress}%` }}></div>
                     </div>
                   </div>
+                  {enrollment.progress >= 100 && enrollment.certificate && (
+                    <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-300 rounded-lg p-4 mt-4">
+                      <div className="flex items-center space-x-3">
+                        <Award className="w-8 h-8 text-yellow-600" />
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-800 mb-1">Поздравляем! Курс завершен</h3>
+                          <p className="text-sm text-gray-600 mb-2">
+                            Вы получили сертификат о прохождении курса
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Номер сертификата: {enrollment.certificate.certificateNumber}
+                          </p>
+                        </div>
+                        <Link
+                          href={`/certificates/${enrollment.certificate.id}`}
+                          className="bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-700 transition">
+                          Просмотреть сертификат
+                        </Link>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex space-x-3">
                     <Link
                       href="/profile"
