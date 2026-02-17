@@ -4,127 +4,127 @@
 
 ```mermaid
 erDiagram
-    User ||--o{ Enrollment : "имеет"
-    User ||--o{ CourseReview : "пишет"
-    User ||--o{ FavoriteCourse : "добавляет"
-    User ||--o{ FavoriteWebinar : "добавляет"
-    User ||--o{ Certificate : "получает"
+    Пользователь ||--o{ ЗаписьНаКурс : "имеет"
+    Пользователь ||--o{ ОтзывОКурсе : "пишет"
+    Пользователь ||--o{ ИзбранныйКурс : "добавляет"
+    Пользователь ||--o{ ИзбранныйВебинар : "добавляет"
+    Пользователь ||--o{ Сертификат : "получает"
     
-    Course ||--o{ Lesson : "содержит"
-    Course ||--o{ Enrollment : "имеет"
-    Course ||--o{ CourseReview : "имеет"
-    Course ||--o{ FavoriteCourse : "в избранном"
+    Курс ||--o{ Урок : "содержит"
+    Курс ||--o{ ЗаписьНаКурс : "имеет"
+    Курс ||--o{ ОтзывОКурсе : "имеет"
+    Курс ||--o{ ИзбранныйКурс : "в избранном"
     
-    Enrollment ||--o{ LessonCompletion : "отслеживает"
-    Enrollment ||--|| Certificate : "генерирует"
+    ЗаписьНаКурс ||--o{ ЗавершениеУрока : "отслеживает"
+    ЗаписьНаКурс ||--|| Сертификат : "генерирует"
     
-    Lesson ||--o{ LessonCompletion : "завершается"
+    Урок ||--o{ ЗавершениеУрока : "завершается"
     
-    Webinar ||--o{ FavoriteWebinar : "в избранном"
+    Вебинар ||--o{ ИзбранныйВебинар : "в избранном"
     
-    User {
-        string id PK
-        string name
+    Пользователь {
+        string идентификатор PK
+        string имя
         string email UK
-        string password
-        string avatar
-        string[] interests
-        boolean hasCompletedTest
-        enum role
-        datetime createdAt
-        datetime updatedAt
+        string пароль
+        string аватар
+        string[] интересы
+        boolean прошелТест
+        enum роль
+        datetime датаСоздания
+        datetime датаОбновления
     }
     
-    Course {
-        string id PK
-        string title
-        string description
-        string fullDescription
-        string instructor
-        string duration
-        int students
-        float rating
-        string category
-        float price
-        string image
-        datetime createdAt
-        datetime updatedAt
+    Курс {
+        string идентификатор PK
+        string название
+        string описание
+        string полноеОписание
+        string преподаватель
+        string длительность
+        int студентов
+        float рейтинг
+        string категория
+        float цена
+        string изображение
+        datetime датаСоздания
+        datetime датаОбновления
     }
     
-    Lesson {
-        string id PK
-        string courseId FK
-        string title
-        string duration
-        string content
-        int order
-        datetime createdAt
+    Урок {
+        string идентификатор PK
+        string идентификаторКурса FK
+        string название
+        string длительность
+        string содержание
+        int порядок
+        datetime датаСоздания
     }
     
-    Enrollment {
-        string id PK
-        string userId FK
-        string courseId FK
-        float progress
-        datetime createdAt
-        datetime updatedAt
+    ЗаписьНаКурс {
+        string идентификатор PK
+        string идентификаторПользователя FK
+        string идентификаторКурса FK
+        float прогресс
+        datetime датаСоздания
+        datetime датаОбновления
     }
     
-    LessonCompletion {
-        string id PK
-        string enrollmentId FK
-        string lessonId FK
-        datetime completedAt
+    ЗавершениеУрока {
+        string идентификатор PK
+        string идентификаторЗаписи FK
+        string идентификаторУрока FK
+        datetime датаЗавершения
     }
     
-    Certificate {
-        string id PK
-        string enrollmentId FK UK
-        string userId FK
-        string courseId FK
-        string certificateNumber UK
-        datetime issuedAt
+    Сертификат {
+        string идентификатор PK
+        string идентификаторЗаписи FK UK
+        string идентификаторПользователя FK
+        string идентификаторКурса FK
+        string номерСертификата UK
+        datetime датаВыдачи
     }
     
-    CourseReview {
-        string id PK
-        string courseId FK
-        string userId FK
-        int rating
-        string text
-        datetime createdAt
-        datetime updatedAt
+    ОтзывОКурсе {
+        string идентификатор PK
+        string идентификаторКурса FK
+        string идентификаторПользователя FK
+        int рейтинг
+        string текст
+        datetime датаСоздания
+        datetime датаОбновления
     }
     
-    Webinar {
-        string id PK
-        string title
-        string description
-        string fullDescription
-        string instructor
-        string instructorBio
-        datetime date
-        string duration
-        int participants
-        boolean isLive
-        string[] topics
-        string category
-        datetime createdAt
-        datetime updatedAt
+    Вебинар {
+        string идентификатор PK
+        string название
+        string описание
+        string полноеОписание
+        string преподаватель
+        string биографияПреподавателя
+        datetime дата
+        string длительность
+        int участников
+        boolean вЭфире
+        string[] темы
+        string категория
+        datetime датаСоздания
+        datetime датаОбновления
     }
     
-    FavoriteCourse {
-        string id PK
-        string userId FK
-        string courseId FK
-        datetime createdAt
+    ИзбранныйКурс {
+        string идентификатор PK
+        string идентификаторПользователя FK
+        string идентификаторКурса FK
+        datetime датаСоздания
     }
     
-    FavoriteWebinar {
-        string id PK
-        string userId FK
-        string webinarId FK
-        datetime createdAt
+    ИзбранныйВебинар {
+        string идентификатор PK
+        string идентификаторПользователя FK
+        string идентификаторВебинара FK
+        datetime датаСоздания
     }
 ```
 
@@ -132,160 +132,160 @@ erDiagram
 
 ```mermaid
 classDiagram
-    class User {
-        +String id
-        +String name
+    class Пользователь {
+        +String идентификатор
+        +String имя
         +String email
-        +String password
-        +String avatar
-        +String[] interests
-        +Boolean hasCompletedTest
-        +Role role
-        +DateTime createdAt
-        +DateTime updatedAt
-        +login()
-        +register()
-        +logout()
+        +String пароль
+        +String аватар
+        +String[] интересы
+        +Boolean прошелТест
+        +Роль роль
+        +DateTime датаСоздания
+        +DateTime датаОбновления
+        +войти()
+        +зарегистрироваться()
+        +выйти()
     }
     
-    class Course {
-        +String id
-        +String title
-        +String description
-        +String fullDescription
-        +String instructor
-        +String duration
-        +Int students
-        +Float rating
-        +String category
-        +Float price
-        +String image
-        +DateTime createdAt
-        +DateTime updatedAt
-        +addLesson()
-        +updateLesson()
-        +deleteLesson()
-        +addReview()
+    class Курс {
+        +String идентификатор
+        +String название
+        +String описание
+        +String полноеОписание
+        +String преподаватель
+        +String длительность
+        +Int студентов
+        +Float рейтинг
+        +String категория
+        +Float цена
+        +String изображение
+        +DateTime датаСоздания
+        +DateTime датаОбновления
+        +добавитьУрок()
+        +обновитьУрок()
+        +удалитьУрок()
+        +добавитьОтзыв()
     }
     
-    class Lesson {
-        +String id
-        +String courseId
-        +String title
-        +String duration
-        +String content
-        +Int order
-        +DateTime createdAt
-        +complete()
+    class Урок {
+        +String идентификатор
+        +String идентификаторКурса
+        +String название
+        +String длительность
+        +String содержание
+        +Int порядок
+        +DateTime датаСоздания
+        +завершить()
     }
     
-    class Enrollment {
-        +String id
-        +String userId
-        +String courseId
-        +Float progress
-        +DateTime createdAt
-        +DateTime updatedAt
-        +calculateProgress()
-        +completeLesson()
-        +generateCertificate()
+    class ЗаписьНаКурс {
+        +String идентификатор
+        +String идентификаторПользователя
+        +String идентификаторКурса
+        +Float прогресс
+        +DateTime датаСоздания
+        +DateTime датаОбновления
+        +рассчитатьПрогресс()
+        +завершитьУрок()
+        +сгенерироватьСертификат()
     }
     
-    class LessonCompletion {
-        +String id
-        +String enrollmentId
-        +String lessonId
-        +DateTime completedAt
+    class ЗавершениеУрока {
+        +String идентификатор
+        +String идентификаторЗаписи
+        +String идентификаторУрока
+        +DateTime датаЗавершения
     }
     
-    class Certificate {
-        +String id
-        +String enrollmentId
-        +String userId
-        +String courseId
-        +String certificateNumber
-        +DateTime issuedAt
-        +generateNumber()
-        +download()
+    class Сертификат {
+        +String идентификатор
+        +String идентификаторЗаписи
+        +String идентификаторПользователя
+        +String идентификаторКурса
+        +String номерСертификата
+        +DateTime датаВыдачи
+        +сгенерироватьНомер()
+        +скачать()
     }
     
-    class CourseReview {
-        +String id
-        +String courseId
-        +String userId
-        +Int rating
-        +String text
-        +DateTime createdAt
-        +DateTime updatedAt
+    class ОтзывОКурсе {
+        +String идентификатор
+        +String идентификаторКурса
+        +String идентификаторПользователя
+        +Int рейтинг
+        +String текст
+        +DateTime датаСоздания
+        +DateTime датаОбновления
     }
     
-    class Webinar {
-        +String id
-        +String title
-        +String description
-        +String fullDescription
-        +String instructor
-        +String instructorBio
-        +DateTime date
-        +String duration
-        +Int participants
-        +Boolean isLive
-        +String[] topics
-        +String category
-        +DateTime createdAt
-        +DateTime updatedAt
+    class Вебинар {
+        +String идентификатор
+        +String название
+        +String описание
+        +String полноеОписание
+        +String преподаватель
+        +String биографияПреподавателя
+        +DateTime дата
+        +String длительность
+        +Int участников
+        +Boolean вЭфире
+        +String[] темы
+        +String категория
+        +DateTime датаСоздания
+        +DateTime датаОбновления
     }
     
-    User "1" --> "*" Enrollment : enrolls
-    User "1" --> "*" CourseReview : writes
-    User "1" --> "*" Certificate : receives
-    Course "1" --> "*" Lesson : contains
-    Course "1" --> "*" Enrollment : has
-    Course "1" --> "*" CourseReview : has
-    Enrollment "1" --> "*" LessonCompletion : tracks
-    Enrollment "1" --> "0..1" Certificate : generates
-    Lesson "1" --> "*" LessonCompletion : completed_in
+    Пользователь "1" --> "*" ЗаписьНаКурс : записывается
+    Пользователь "1" --> "*" ОтзывОКурсе : пишет
+    Пользователь "1" --> "*" Сертификат : получает
+    Курс "1" --> "*" Урок : содержит
+    Курс "1" --> "*" ЗаписьНаКурс : имеет
+    Курс "1" --> "*" ОтзывОКурсе : имеет
+    ЗаписьНаКурс "1" --> "*" ЗавершениеУрока : отслеживает
+    ЗаписьНаКурс "1" --> "0..1" Сертификат : генерирует
+    Урок "1" --> "*" ЗавершениеУрока : завершается_в
 ```
 
 ## 3. Диаграмма компонентов (Component Diagram)
 
 ```mermaid
 graph TB
-    subgraph "Frontend (Next.js)"
-        A[Pages]
-        B[Components]
-        C[Contexts]
-        D[API Routes]
+    subgraph "Фронтенд (Next.js)"
+        A[Страницы]
+        B[Компоненты]
+        C[Контексты]
+        D[API Маршруты]
     end
     
-    subgraph "Contexts"
-        C1[AuthContext]
-        C2[CoursesContext]
-        C3[EnrollmentsContext]
-        C4[FavoritesContext]
-        C5[WebinarsContext]
+    subgraph "Контексты"
+        C1[КонтекстАвторизации]
+        C2[КонтекстКурсов]
+        C3[КонтекстЗаписей]
+        C4[КонтекстИзбранного]
+        C5[КонтекстВебинаров]
     end
     
-    subgraph "API Layer"
-        D1[/api/auth]
-        D2[/api/courses]
-        D3[/api/enrollments]
-        D4[/api/certificates]
-        D5[/api/webinars]
-        D6[/api/favorites]
-        D7[/api/admin]
+    subgraph "Слой API"
+        D1[API Авторизация]
+        D2[API Курсы]
+        D3[API Записи]
+        D4[API Сертификаты]
+        D5[API Вебинары]
+        D6[API Избранное]
+        D7[API Администрирование]
     end
     
-    subgraph "Business Logic"
-        E1[Authentication Service]
-        E2[Course Service]
-        E3[Enrollment Service]
-        E4[Certificate Service]
+    subgraph "Бизнес-логика"
+        E1[СервисАвторизации]
+        E2[СервисКурсов]
+        E3[СервисЗаписей]
+        E4[СервисСертификатов]
     end
     
-    subgraph "Data Layer"
+    subgraph "Слой данных"
         F[Prisma ORM]
-        G[(PostgreSQL Database)]
+        G[(База данных PostgreSQL)]
     end
     
     A --> B
@@ -318,31 +318,31 @@ graph TB
 
 ```mermaid
 sequenceDiagram
-    participant U as User (Browser)
-    participant P as Course Page
-    participant EC as EnrollmentsContext
-    participant API as /api/enrollments
-    participant DB as Database
-    participant CC as CoursesContext
+    participant П as Пользователь (Браузер)
+    participant СК as СтраницаКурса
+    participant КЗ as КонтекстЗаписей
+    participant API as API Записи
+    participant БД as БазаДанных
+    participant КК as КонтекстКурсов
     
-    U->>P: Нажимает "Записаться на курс"
-    P->>EC: handleEnroll()
-    EC->>API: POST /api/enrollments
-    API->>DB: Проверка существующей записи
-    DB-->>API: Результат проверки
+    П->>СК: Нажимает "Записаться на курс"
+    СК->>КЗ: обработатьЗапись()
+    КЗ->>API: POST записи
+    API->>БД: Проверка существующей записи
+    БД-->>API: Результат проверки
     alt Запись не существует
-        API->>DB: Создание Enrollment
-        API->>DB: Увеличение счетчика студентов
-        DB-->>API: Enrollment создан
-        API-->>EC: Успешный ответ
-        EC->>EC: fetchEnrollments()
-        EC->>CC: refreshCourses()
-        EC-->>P: Обновление состояния
-        P-->>U: Отображение статуса "Записан"
+        API->>БД: Создание ЗаписиНаКурс
+        API->>БД: Увеличение счетчика студентов
+        БД-->>API: ЗаписьНаКурс создана
+        API-->>КЗ: Успешный ответ
+        КЗ->>КЗ: получитьЗаписи()
+        КЗ->>КК: обновитьКурсы()
+        КЗ-->>СК: Обновление состояния
+        СК-->>П: Отображение статуса "Записан"
     else Запись уже существует
-        API-->>EC: Ошибка "Уже записан"
-        EC-->>P: Сообщение об ошибке
-        P-->>U: Показ ошибки
+        API-->>КЗ: Ошибка "Уже записан"
+        КЗ-->>СК: Сообщение об ошибке
+        СК-->>П: Показ ошибки
     end
 ```
 
@@ -350,58 +350,58 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant LP as Lesson Page
-    participant EC as EnrollmentsContext
-    participant API as /api/enrollments/.../complete
-    participant DB as Database
+    participant П as Пользователь
+    participant СУ as СтраницаУрока
+    participant КЗ as КонтекстЗаписей
+    participant API as API ЗавершениеУрока
+    participant БД as БазаДанных
     
-    U->>LP: Завершает урок
-    LP->>EC: completeLesson()
-    EC->>API: POST /api/enrollments/{id}/lessons/{id}/complete
-    API->>DB: Создание LessonCompletion
-    API->>DB: Подсчет завершенных уроков
-    API->>DB: Обновление progress в Enrollment
+    П->>СУ: Завершает урок
+    СУ->>КЗ: завершитьУрок()
+    КЗ->>API: POST завершить урок
+    API->>БД: Создание ЗавершенияУрока
+    API->>БД: Подсчет завершенных уроков
+    API->>БД: Обновление прогресса в ЗаписиНаКурс
     
-    alt progress >= 100%
-        API->>DB: Проверка существования Certificate
-        alt Certificate не существует
-            API->>DB: Создание Certificate
-            API->>DB: Генерация certificateNumber
-            DB-->>API: Certificate создан
+    alt прогресс >= 100%
+        API->>БД: Проверка существования Сертификата
+        alt Сертификат не существует
+            API->>БД: Создание Сертификата
+            API->>БД: Генерация номераСертификата
+            БД-->>API: Сертификат создан
         end
-        API-->>EC: Ответ с Certificate
-        EC->>EC: fetchEnrollments()
-        EC-->>LP: Обновление состояния
-        LP-->>U: Уведомление о получении сертификата
-    else progress < 100%
-        API-->>EC: Ответ без Certificate
-        EC-->>LP: Обновление progress
-        LP-->>U: Отображение обновленного прогресса
+        API-->>КЗ: Ответ с Сертификатом
+        КЗ->>КЗ: получитьЗаписи()
+        КЗ-->>СУ: Обновление состояния
+        СУ-->>П: Уведомление о получении сертификата
+    else прогресс < 100%
+        API-->>КЗ: Ответ без Сертификата
+        КЗ-->>СУ: Обновление прогресса
+        СУ-->>П: Отображение обновленного прогресса
     end
 ```
 
-## 6. Диаграмма состояний - Enrollment (Запись на курс)
+## 6. Диаграмма состояний - Запись на курс
 
 ```mermaid
 stateDiagram-v2
-    [*] --> NotEnrolled: Пользователь не записан
+    [*] --> НеЗаписан: Пользователь не записан
     
-    NotEnrolled --> Enrolling: Нажатие "Записаться"
-    Enrolling --> Enrolled: Успешная запись
-    Enrolling --> NotEnrolled: Ошибка записи
+    НеЗаписан --> Записывается: Нажатие "Записаться"
+    Записывается --> Записан: Успешная запись
+    Записывается --> НеЗаписан: Ошибка записи
     
-    Enrolled --> InProgress: Начало прохождения
-    InProgress --> LessonCompleted: Завершение урока
-    LessonCompleted --> InProgress: Продолжение курса
-    LessonCompleted --> Completed: Все уроки завершены
+    Записан --> ВПроцессе: Начало прохождения
+    ВПроцессе --> УрокЗавершен: Завершение урока
+    УрокЗавершен --> ВПроцессе: Продолжение курса
+    УрокЗавершен --> Завершен: Все уроки завершены
     
-    Completed --> CertificateGenerated: Генерация сертификата
-    CertificateGenerated --> [*]
+    Завершен --> СертификатСгенерирован: Генерация сертификата
+    СертификатСгенерирован --> [*]
     
-    Enrolled --> Unenrolled: Отписка от курса
-    InProgress --> Unenrolled: Отписка от курса
-    Unenrolled --> [*]
+    Записан --> Отписан: Отписка от курса
+    ВПроцессе --> Отписан: Отписка от курса
+    Отписан --> [*]
 ```
 
 ## 7. Диаграмма вариантов использования (Use Case Diagram)
@@ -409,47 +409,47 @@ stateDiagram-v2
 ```mermaid
 graph TB
     subgraph "Актеры"
-        Student[Студент]
-        Teacher[Преподаватель]
-        Admin[Администратор]
+        Студент[Студент]
+        Преподаватель[Преподаватель]
+        Администратор[Администратор]
     end
     
     subgraph "Основные функции"
-        UC1[Регистрация/Вход]
-        UC2[Просмотр курсов]
-        UC3[Запись на курс]
-        UC4[Прохождение уроков]
-        UC5[Получение сертификата]
-        UC6[Просмотр вебинаров]
-        UC7[Добавление в избранное]
-        UC8[Оставление отзывов]
-        UC9[Создание курса]
-        UC10[Управление уроками]
-        UC11[Управление пользователями]
-        UC12[Просмотр статистики]
+        ВУ1[Регистрация/Вход]
+        ВУ2[Просмотр курсов]
+        ВУ3[Запись на курс]
+        ВУ4[Прохождение уроков]
+        ВУ5[Получение сертификата]
+        ВУ6[Просмотр вебинаров]
+        ВУ7[Добавление в избранное]
+        ВУ8[Оставление отзывов]
+        ВУ9[Создание курса]
+        ВУ10[Управление уроками]
+        ВУ11[Управление пользователями]
+        ВУ12[Просмотр статистики]
     end
     
-    Student --> UC1
-    Student --> UC2
-    Student --> UC3
-    Student --> UC4
-    Student --> UC5
-    Student --> UC6
-    Student --> UC7
-    Student --> UC8
+    Студент --> ВУ1
+    Студент --> ВУ2
+    Студент --> ВУ3
+    Студент --> ВУ4
+    Студент --> ВУ5
+    Студент --> ВУ6
+    Студент --> ВУ7
+    Студент --> ВУ8
     
-    Teacher --> UC1
-    Teacher --> UC2
-    Teacher --> UC9
-    Teacher --> UC10
-    Teacher --> UC8
+    Преподаватель --> ВУ1
+    Преподаватель --> ВУ2
+    Преподаватель --> ВУ9
+    Преподаватель --> ВУ10
+    Преподаватель --> ВУ8
     
-    Admin --> UC1
-    Admin --> UC2
-    Admin --> UC9
-    Admin --> UC10
-    Admin --> UC11
-    Admin --> UC12
+    Администратор --> ВУ1
+    Администратор --> ВУ2
+    Администратор --> ВУ9
+    Администратор --> ВУ10
+    Администратор --> ВУ11
+    Администратор --> ВУ12
 ```
 
 ## 8. Диаграмма развертывания (Deployment Diagram)
@@ -457,25 +457,25 @@ graph TB
 ```mermaid
 graph TB
     subgraph "Клиент"
-        Browser[Веб-браузер]
+        Браузер[Веб-браузер]
     end
     
-    subgraph "Frontend Server"
-        NextJS[Next.js Application]
-        Static[Static Files]
+    subgraph "Сервер фронтенда"
+        NextJS[Приложение Next.js]
+        Статика[Статические файлы]
     end
     
     subgraph "Backend API"
-        API[API Routes]
+        API[API Маршруты]
         Prisma[Prisma Client]
     end
     
-    subgraph "Database Server"
-        PostgreSQL[(PostgreSQL Database)]
+    subgraph "Сервер базы данных"
+        PostgreSQL[(База данных PostgreSQL)]
     end
     
-    Browser --> NextJS
-    Browser --> Static
+    Браузер --> NextJS
+    Браузер --> Статика
     NextJS --> API
     API --> Prisma
     Prisma --> PostgreSQL
@@ -490,7 +490,7 @@ graph TB
 Отображает основные классы системы, их атрибуты и методы, а также отношения между классами.
 
 ### 3. Диаграмма компонентов
-Демонстрирует архитектуру приложения, разделение на слои (Frontend, API, Business Logic, Data Layer).
+Демонстрирует архитектуру приложения, разделение на слои (Фронтенд, API, Бизнес-логика, Слой данных).
 
 ### 4. Диаграмма последовательности - Запись на курс
 Показывает пошаговый процесс записи пользователя на курс с взаимодействием между компонентами.
@@ -499,7 +499,7 @@ graph TB
 Иллюстрирует процесс завершения урока, обновления прогресса и автоматической генерации сертификата при достижении 100%.
 
 ### 6. Диаграмма состояний
-Отображает жизненный цикл записи на курс (Enrollment) от момента записи до получения сертификата.
+Отображает жизненный цикл записи на курс от момента записи до получения сертификата.
 
 ### 7. Диаграмма вариантов использования
 Показывает основные функции системы и роли пользователей, которые могут их выполнять.
