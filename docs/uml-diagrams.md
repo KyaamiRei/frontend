@@ -79,10 +79,10 @@ erDiagram
     
     Сертификат {
         string идентификатор PK
-        string идентификаторЗаписи FK UK
+        string идентификаторЗаписи FK
         string идентификаторПользователя FK
         string идентификаторКурса FK
-        string номерСертификата UK
+        string номерСертификата
         datetime датаВыдачи
     }
     
